@@ -1,0 +1,8 @@
+{
+  "state_id": "inventory_state",
+  "akira": {
+    "visible_inventory": [],
+    "nearby_items": [],
+    "hidden_items": []
+  }
+}
