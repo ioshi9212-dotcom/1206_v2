@@ -1,0 +1,14 @@
+project_slug: akira-1206v2
+story_title: "Akira 1206 v2"
+public_base_url: "https://1206v2-production.up.railway.app"
+data_dir: "/data"
+start:
+  date: "1206-08-31"
+  time: "02:40"
+  location_id: "jun_house"
+  location_text: "Дом Джуна"
+  weekday: "день уточнить"
+header:
+  format: "same_as_academy_old_visual_novel_header"
+  title_line_template: "🌘 Астрейн · {year} г., {day_month}, {weekday}"
+  location_rule: "Always use current_state.current_location_text; never hard-code a single place."
