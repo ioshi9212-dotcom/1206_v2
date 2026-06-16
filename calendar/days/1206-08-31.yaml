@@ -1,0 +1,22 @@
+date: "1206-08-31"
+year: 1206
+day_month: "31 августа"
+weekday: "день уточнить"
+time_start: "02:40"
+label: "ночной старт в доме Джуна"
+
+scene_rules:
+  - "Стартовая локация: дом Джуна."
+  - "Не прибивать будущие сцены к этой локации; после смены места шапка берёт current_location_text из state."
+  - "Не раскрывать hidden lore автоматически."
+  - "Первые сцены должны дать атмосферу ночи, состояние Акиры и фактическую ситуацию вокруг дома."
+
+beats:
+  - beat_id: "start_0240_jun_house"
+    time: "02:40"
+    location_id: "jun_house"
+    location_text: "Дом Джуна"
+    required: true
+    character_ids: ["akira", "jun"]
+    summary: "Старт истории 1206 v2. Ночная сцена в доме Джуна."
+    status: "active"
