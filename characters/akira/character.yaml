@@ -1,0 +1,16 @@
+id: akira
+name_ru: "Акира"
+role: "POV-персонаж"
+status: "skeleton_placeholder"
+
+visibility:
+  can_be_used_in_scene: true
+  hidden_lore_policy: "Не раскрывать скрытые сведения без отдельного файла и сценовой причины."
+
+appearance: "TODO: добавить внешность."
+personality: "TODO: добавить характер."
+voice: "TODO: добавить речевой стиль."
+knows_at_start:
+  - "TODO: добавить стартовые знания."
+scene_rules:
+  - "Действовать только по заполненной карточке. Если данных нет — не выдумывать важный канон."

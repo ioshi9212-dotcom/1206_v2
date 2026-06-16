@@ -1,0 +1,12 @@
+{
+  "state_id": "calendar_runtime",
+  "calendar_source": "calendar/calendar_index.yaml",
+  "current_date": "1206-08-31",
+  "current_day_file": "calendar/days/1206-08-31.yaml",
+  "current_beat_id": "start_0240_jun_house",
+  "completed_beat_ids": [],
+  "skipped_beat_ids": [],
+  "introduced_character_ids": [
+    "akira"
+  ]
+}
