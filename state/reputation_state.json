@@ -1,5 +1,6 @@
 {
-  "state_id": "reputation_state",
-  "groups": {},
-  "notes": []
+  "schema": "reputation_state_v1",
+  "project": "akira-main-1206",
+  "factions": {},
+  "characters": {}
 }

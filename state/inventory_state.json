@@ -1,8 +1,6 @@
 {
-  "state_id": "inventory_state",
-  "akira": {
-    "visible_inventory": [],
-    "nearby_items": [],
-    "hidden_items": []
-  }
+  "schema": "inventory_state_v1",
+  "project": "akira-main-1206",
+  "items": {},
+  "notes": []
 }

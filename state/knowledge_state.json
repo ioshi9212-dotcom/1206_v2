@@ -1,11 +1,7 @@
 {
-  "state_id": "knowledge_state",
-  "characters": {
-    "akira": {
-      "knows": []
-    },
-    "jun": {
-      "knows": []
-    }
-  }
+  "schema": "knowledge_state_v1",
+  "project": "akira-main-1206",
+  "known_facts": {},
+  "unknown_to_player": [],
+  "npc_knowledge_overrides": {}
 }
