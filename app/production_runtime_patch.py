@@ -7,7 +7,7 @@ from app.start_scene_runtime_patch import app
 import app.response_size_guard_runtime_patch as size_guard  # noqa: F401
 import app.pov_switch_runtime_patch as pov_switch  # noqa: F401
 
-app.version = "0.3.74-1206-production-timefix-pov-v1"
+app.version = "0.3.76-1206-production-context-sizeguard-pov"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:

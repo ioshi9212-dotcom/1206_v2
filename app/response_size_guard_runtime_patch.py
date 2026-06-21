@@ -30,44 +30,94 @@ PROGRESS_FILES = [
 ]
 
 CHARACTER_FILE_MAP = {
+    # Base files are safe for normal turns.
     "akira": [
         "characters/akira/akira_main_profile.yaml",
         "characters/akira/akira_knowledge_connections.yaml",
-        "characters/akira/akira_hidden_past.yaml",
         "characters/akira/akira_thought_triggers.yaml",
     ],
     "jun": [
         "characters/jun/jun_main_profile.yaml",
         "characters/jun/jun_knowledge_connections.yaml",
-        "characters/jun/jun_hidden_past.yaml",
     ],
     "irey": [
         "characters/irey/irey_main_profile.yaml",
         "characters/irey/irey_knowledge_connections.yaml",
-        "characters/irey/irey_hidden_past.yaml",
     ],
     "emma": [
         "characters/emma/emma_main_profile.yaml",
         "characters/emma/emma_knowledge_connections.yaml",
-        "characters/emma/emma_hidden_past.yaml",
     ],
     "raiden": [
         "characters/raiden/raiden_main_profile.yaml",
         "characters/raiden/raiden_knowledge_connections.yaml",
-        "characters/raiden/raiden_hidden_past.yaml",
-        "canon/relationships/akira_raiden_hidden_bond.yaml",
     ],
     "ray": [
         "characters/ray/ray_main_profile.yaml",
         "characters/ray/ray_knowledge_connections.yaml",
-        "characters/ray/ray_hidden_past.yaml",
     ],
     "yuna": [
         "characters/yuna/yuna_main_profile.yaml",
         "characters/yuna/yuna_knowledge_connections.yaml",
-        "characters/yuna/yuna_hidden_past.yaml",
+    ],
+    "haru": [
+        "characters/haru/haru_main_profile.yaml",
+        "characters/haru/haru_knowledge_connections.yaml",
     ],
 }
+
+SENSITIVE_CHARACTER_FILE_MAP = {
+    # Hidden/past files are not loaded every normal turn.
+    # They are added only when the current turn explicitly needs past/hidden context.
+    "akira": [
+        "characters/akira/akira_hidden_past.yaml",
+    ],
+    "jun": [
+        "characters/jun/jun_hidden_past.yaml",
+    ],
+    "irey": [
+        "characters/irey/irey_hidden_past.yaml",
+    ],
+    "emma": [
+        "characters/emma/emma_hidden_past.yaml",
+    ],
+    "raiden": [
+        "characters/raiden/raiden_hidden_past.yaml",
+        "canon/relationships/akira_raiden_hidden_bond.yaml",
+    ],
+    "ray": [
+        "characters/ray/ray_hidden_past.yaml",
+    ],
+    "yuna": [
+        "characters/yuna/yuna_hidden_past.yaml",
+    ],
+    "haru": [
+        "characters/haru/haru_hidden_past.yaml",
+    ],
+}
+
+ACTIVE_CHARACTER_FIELDS = [
+    "active_characters",
+    "nearby_characters",
+    "speaking_character_ids",
+    "observing_character_ids",
+    "addressed_character_ids",
+    "looked_at_character_ids",
+    "scheduled_character_ids",
+    "active_character_ids",
+    "nearby_character_ids",
+]
+
+BACKGROUND_CHARACTER_FIELDS = [
+    "mentioned_character_ids",
+    "delayed_character_ids",
+]
+
+PAST_TRIGGER_WORDS = [
+    "прошл", "памят", "вспом", "забы", "кольц", "шрам", "ребен", "ребён",
+    "берем", "саму", "лаборатор", "эксперимент", "кайрос", "поток", "энерг",
+    "рейден", "райден", "рэй", "ирэй", "хару", "сон", "кошмар", "восточный сектор",
+]
 
 VISIBLE_LABELS_DEFAULT = {
     "akira__jun": "Джун",
@@ -158,16 +208,23 @@ def _compact(value: Any, limit: int = 900) -> Any:
     return str(value)[:limit]
 
 
-def _scene_chars(current: dict[str, Any], future: dict[str, Any]) -> list[str]:
-    values: list[Any] = ["akira"]
-    for field in [
-        "active_characters", "nearby_characters", "speaking_character_ids", "observing_character_ids",
-        "addressed_character_ids", "looked_at_character_ids", "mentioned_character_ids", "scheduled_character_ids",
-        "delayed_character_ids", "active_character_ids", "nearby_character_ids",
-    ]:
+def _field_ids(current: dict[str, Any], fields: list[str]) -> list[str]:
+    values: list[Any] = []
+    for field in fields:
         field_values = current.get(field, []) or []
         if isinstance(field_values, list):
             values.extend(field_values)
+    return _unique([str(v).strip() for v in values if str(v).strip()])
+
+
+def _scene_chars(current: dict[str, Any], future: dict[str, Any]) -> list[str]:
+    """Full-load character focus for the current turn.
+
+    Like Academy speed mode: full character files are loaded only for active/nearby/speaking/
+    addressed/scheduled characters. Mentioned/delayed characters stay as lightweight context.
+    """
+    values: list[Any] = ["akira"]
+    values.extend(_field_ids(current, ACTIVE_CHARACTER_FIELDS))
     for thread in current.get("open_threads", []) or []:
         if isinstance(thread, dict) and str(thread.get("status", "")).lower() in {"due", "active", "triggered", "ready"}:
             values.extend(thread.get("participants", []) or [])
@@ -179,29 +236,78 @@ def _scene_chars(current: dict[str, Any], future: dict[str, Any]) -> list[str]:
     return _unique([str(v).strip() for v in values if str(v).strip()])
 
 
+def _background_chars(current: dict[str, Any]) -> dict[str, list[str]]:
+    return {
+        field: _field_ids(current, [field])
+        for field in BACKGROUND_CHARACTER_FIELDS
+        if _field_ids(current, [field])
+    }
+
+
+def _turn_text_for_triggers(current: dict[str, Any]) -> str:
+    parts = [
+        current.get("last_player_input"),
+        current.get("current_scene_goal"),
+        current.get("current_location_text"),
+        current.get("last_visible_scene_text"),
+    ]
+    return "\n".join(str(p or "") for p in parts).lower()
+
+
+def _should_load_sensitive_files(cid: str, current: dict[str, Any]) -> bool:
+    text = _turn_text_for_triggers(current)
+    if any(word in text for word in PAST_TRIGGER_WORDS):
+        return True
+    # If the character is directly addressed in a heavy emotional/knowledge beat,
+    # allow hidden/past only by explicit state flag.
+    sensitive_requested = current.get("load_sensitive_character_context")
+    if isinstance(sensitive_requested, list) and cid in sensitive_requested:
+        return True
+    return False
+
+
+def _existing(path: str) -> bool:
+    if path.startswith("state/"):
+        return True
+    try:
+        return bool(base.repo_file_exists(path))
+    except Exception:
+        return False
+
+
 def _required_files(current: dict[str, Any], future: dict[str, Any]) -> list[str]:
     files = list(START_REQUIRED_FILES)
-    for cid in _scene_chars(current, future):
+    active_chars = _scene_chars(current, future)
+
+    for cid in active_chars:
         files.extend(CHARACTER_FILE_MAP.get(cid, []))
+        if _should_load_sensitive_files(cid, current):
+            files.extend(SENSITIVE_CHARACTER_FILE_MAP.get(cid, []))
+
+    # State files are JSON and usually compacted by API readers; keep only essentials here.
     files.extend([
-        "state/current_state.json", "state/story_lines.json", "state/knowledge_state.json", "state/relationships.json",
-        "state/inventory_state.json", "state/power_state.json", "state/future_locks_progress.json",
-        "state/session_npcs.json", "state/calendar_runtime.json",
+        "state/current_state.json",
+        "state/story_lines.json",
+        "state/knowledge_state.json",
+        "state/relationships.json",
+        "state/inventory_state.json",
+        "state/power_state.json",
+        "state/future_locks_progress.json",
+        "state/session_npcs.json",
+        "state/calendar_runtime.json",
+        "state/scene_history.json",
     ])
     files.extend(PROGRESS_FILES)
+
     result: list[str] = []
     for path in files:
-        if not path or path in result:
-            continue
-        if path.startswith("state/"):
+        if path and path not in result and _existing(path):
             result.append(path)
-            continue
-        try:
-            if base.repo_file_exists(path):
-                result.append(path)
-        except Exception:
-            pass
     return result
+
+
+def _recommended_files_for_context_size_guard(current: dict[str, Any] | None = None, future: dict[str, Any] | None = None) -> list[str]:
+    return _required_files(current or {}, future or {})
 
 
 def _current_state_slice(current: dict[str, Any]) -> dict[str, Any]:
@@ -372,6 +478,99 @@ def _progress_slice(session_id: str, relationships: Any | None = None) -> dict[s
     }
 
 
+
+def _safe_int(value: Any, default: int = 0) -> int:
+    try:
+        return int(value)
+    except Exception:
+        return default
+
+
+def _turn_counter_from_story(story_lines: Any) -> dict[str, Any]:
+    if not isinstance(story_lines, dict):
+        return {}
+    counter = story_lines.get("turn_counter", {})
+    return counter if isinstance(counter, dict) else {}
+
+
+def _audit_due_status(story_lines: Any) -> dict[str, Any]:
+    counter = _turn_counter_from_story(story_lines)
+    game_turn_number = _safe_int(
+        counter.get("game_turn_number", counter.get("game_turn", counter.get("turn_number", counter.get("scene_count", 0)))),
+        0,
+    )
+    last_audit_turn = _safe_int(counter.get("last_continuity_audit_turn", counter.get("last_compaction_turn", 0)), 0)
+    next_due = ((last_audit_turn // 15) + 1) * 15 if last_audit_turn >= 0 else 15
+    exact_due = game_turn_number > 0 and game_turn_number % 15 == 0 and last_audit_turn < game_turn_number
+    missed_due = game_turn_number >= next_due and last_audit_turn < next_due
+    return {
+        "game_turn_number": game_turn_number,
+        "last_continuity_audit_turn": last_audit_turn,
+        "next_continuity_audit_turn": next_due,
+        "audit_due": bool(exact_due or missed_due),
+        "rule": "If audit_due=true, audit recent scene texts against saved state before normal continuation.",
+    }
+
+
+def _recent_scene_history_slice(session_id: str, audit_due: bool) -> dict[str, Any]:
+    history = _safe_read_json("state/scene_history.json", session_id, None)
+    if history is None:
+        history = _safe_read_json("scene_history.json", session_id, [])
+    if not isinstance(history, list):
+        history = []
+    recent = history[-15:]
+    if not audit_due:
+        return {
+            "mode": "not_due",
+            "available_recent_scene_count": len(recent),
+            "note": "Recent scene texts are withheld until 15-turn audit is due to avoid ResponseTooLargeError.",
+        }
+
+    compact_recent = []
+    for item in recent:
+        if not isinstance(item, dict):
+            continue
+        compact_recent.append({
+            "turn_number": item.get("turn_number"),
+            "player_input": _compact(item.get("player_input", ""), 800),
+            "scene_text": _compact(item.get("scene_text", item.get("visible_scene_text", "")), 2200),
+            "notes": _compact(item.get("notes", []), 500),
+        })
+    return {
+        "mode": "audit_due_include_recent_scene_texts",
+        "recent_scene_count": len(compact_recent),
+        "audit_instruction": [
+            "Extract played facts from recent scene texts, not only from state.",
+            "Compare with story_lines, knowledge_state, relationships, calendar_runtime and current_state.",
+            "If played facts are missing from state, write them through apply-turn-result.",
+            "Only after that compact repeated/minor events.",
+        ],
+        "recent_scenes": compact_recent,
+    }
+
+
+def _story_slice(story_lines: Any, session_id: str, relationships: Any) -> dict[str, Any]:
+    if not isinstance(story_lines, dict):
+        story_lines = {}
+    shared = story_lines.get("shared_events")
+    if isinstance(shared, list):
+        shared = shared[-12:]
+    else:
+        shared = []
+    audit_status = _audit_due_status(story_lines)
+    return {
+        "turn_counter": _compact(story_lines.get("turn_counter"), 900),
+        "daily_timeline": _compact(story_lines.get("daily_timeline"), 1400),
+        "shared_events_recent": _compact(shared, 1200),
+        "next_beats": _compact(story_lines.get("next_beats"), 1200),
+        "open_threads": _compact(story_lines.get("open_threads"), 1000),
+        "background_character_ids_not_loaded_full": _background_chars(_safe_read_json("state/current_state.json", session_id, {})),
+        "continuity_audit": audit_status,
+        "recent_scene_history": _recent_scene_history_slice(session_id, bool(audit_status.get("audit_due"))),
+        "progress_panel": _progress_slice(session_id, relationships),
+        "response_size_rule": "Do not create/reset sessions after ResponseTooLargeError. Continue same session through compact contract and smaller chunks.",
+    }
+
 def _small_output_contract() -> dict[str, Any]:
     return {
         "format": "1206_visual_novel_header_v2",
@@ -401,6 +600,8 @@ def _small_output_contract() -> dict[str, Any]:
             "Bottom-block options are not facts until player chooses them.",
             "End panel must show current total state/progress/relationship scores, not only per-scene deltas.",
             "Relationship details stay internal; visible panel shows visible label, score and short label.",
+            "If ResponseTooLargeError happens, never create/reset a session to bypass it; keep the same session_id and continue via compact contract plus smaller required-file chunks.",
+            "If a required-files chunk is too large, retry the same chunk with lower max_chars/max_items instead of resetting state.",
         ],
     }
 
@@ -416,6 +617,7 @@ def _small_prompt_preview(chars: list[str], required_files: list[str]) -> str:
         "- Enforce player action boundary and unanswered hook rule.\n"
         "- Final answer must be visible scene only, no API/status/debug.\n"
         "- Bottom panel must include actions, possible Akira lines, Akira thoughts, state, relationships.\n"
+        "- ResponseTooLarge recovery: keep same session_id, never reset/create a new session; retry with smaller chunk limits.\n"
     )
 
 
@@ -476,10 +678,7 @@ def get_session_turn_contract_size_guard(session_id: str) -> TurnContractWithPro
     story_lines = _safe_read_json("state/story_lines.json", sid, {})
     chars = _scene_chars(current, future)
     files = _required_files(current, future)
-    story_context = _compact(story_lines, 1600)
-    if not isinstance(story_context, dict):
-        story_context = {"story_lines": story_context}
-    story_context["progress_panel"] = _progress_slice(sid, relationships)
+    story_context = _story_slice(story_lines, sid, relationships)
     return TurnContractWithPromptPreview(
         session_id=sid,
         active_character_ids=_unique(current.get("active_characters", []) or current.get("active_character_ids", []) or []),
@@ -489,6 +688,8 @@ def get_session_turn_contract_size_guard(session_id: str) -> TurnContractWithPro
         required_checks_before_answer=[
             "Call getRequiredFilesManifest next.",
             "Then call getRequiredFilesChunk starting at chunk_index=0 until has_more=false.",
+            "If a chunk causes ResponseTooLargeError, retry the same session and same chunk with smaller max_chars/max_items.",
+            "Never create a new session or use reset:true to bypass ResponseTooLargeError.",
             "Do not render gameplay from this compact contract alone.",
             "Load current calendar day file and scene/global technical rules before scene output.",
             "Use latest visible scene facts before stale current_state.",
@@ -511,4 +712,9 @@ def get_session_turn_contract_size_guard(session_id: str) -> TurnContractWithPro
     )
 
 
-app.version = "0.3.72-1206-scene-rules-panel-v1"
+base.active_scene_characters = _scene_chars
+base.recommended_files_for_context = _recommended_files_for_context_size_guard
+ccp.active_scene_characters = _scene_chars
+ccp.recommended_files_for_context = _recommended_files_for_context_size_guard
+
+app.version = "0.3.75-1206-context-size-guard-v1"
