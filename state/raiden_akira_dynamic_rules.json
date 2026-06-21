@@ -27,6 +27,6 @@
       "searching for flaws",
       "hidden pull under visible annoyance"
     ],
-    "location_generation_rule": "Do not invent new locations without contract/calendar/required_files/location registry/player movement. New locations are allowed only when grounded."
+    "location_rule": "Do not invent new locations without contract/calendar/required_files/location registry/player movement."
   }
 }

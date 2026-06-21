@@ -28,6 +28,16 @@
       "score": 0,
       "label": "незнакомец",
       "visible_only_when_present": true
+    },
+    "akira_to_miki": {
+      "score": 0,
+      "label": "не знакомы",
+      "visible_only_when_present": true
+    },
+    "akira_to_yuna": {
+      "score": 0,
+      "label": "не узнаёт",
+      "visible_only_when_present": true
     }
   },
   "hidden_relationships": {
@@ -94,6 +104,19 @@
     "emma_to_akira": {
       "irritation": 35,
       "task_pressure": 80
+    },
+    "yuna_to_akira": {
+      "guilt": 80,
+      "medical_interest": 75,
+      "pity": 65,
+      "knows_too_much": true,
+      "label": "вина/медицинское знание/неоднозначность"
+    },
+    "miki_to_akira": {
+      "interest": 45,
+      "care": 55,
+      "trust_start": 5,
+      "label": "интерес и быстрая бытовая забота без знания прошлого"
     }
   },
   "notes": [
@@ -109,6 +132,10 @@
     "Raiden must not verbalize erased-memory awareness to Akira.",
     "Raiden's first-phase reaction to Akira is avoidance/distancing after ensuring safety, not chasing.",
     "Raiden's jealousy/protection should be rationalized as irritation, threat assessment, or stupidity of the situation.",
-    "Akira-Raiden early 1206 surface dynamic should be tense, irritating, sharp, not soft recognition."
+    "Akira-Raiden early 1206 surface dynamic should be tense, irritating, sharp, not soft recognition.",
+    "Miki does not know Akira at start; first support is food/clothes/talk, not hidden lore.",
+    "Yuna knows Akira from Samuel period, but this is hidden and not public base knowledge.",
+    "Ray and Jun know Akira served in the Northern unit under Samuel, not East Sector.",
+    "Samuel name may appear publicly, but hidden pursuit/cause must not be revealed."
   ]
 }

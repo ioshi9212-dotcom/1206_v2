@@ -1,0 +1,30 @@
+{
+  "schema": "context_loading_rules_1206_v9",
+  "goal": "avoid ResponseTooLarge and wrong NPC knowledge",
+  "always_load": [
+    "current_state",
+    "calendar current date",
+    "small east sector context",
+    "Akira main/character card"
+  ],
+  "character_loading": {
+    "akira": "always main+character",
+    "active_present_characters": "main+character only",
+    "past_hidden_files": "load only by topic trigger or strong scene need",
+    "conditional_characters": "do not load until active/triggered",
+    "future_characters": "do not load just because important later"
+  },
+  "topic_triggers": {
+    "samuel": "load only public/needed context; do not reveal hidden Samuel pursuit",
+    "raiden": "ring/cold/cigarettes/white hair/piercing/basketball",
+    "yuna": "medblock/injury/loss of consciousness/medical observation",
+    "miki": "Sept 1 entry/food/clothes/light/Alex/friend support",
+    "kairos": "only if the scene actually discusses race/energy"
+  },
+  "forbidden": [
+    "do_not_dump_all_required_files_in_turn_contract",
+    "do_not_load_all_characters",
+    "do_not_use_hidden_lore_as_npc_knowledge",
+    "do_not_create_new_locations_without_grounding"
+  ]
+}

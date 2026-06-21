@@ -42,6 +42,10 @@ CHARACTER_FOLDER_ALIASES: dict[str, str] = {
     "yuna": "yuna",
     "yuna_gray": "yuna",
     "char_yuna": "yuna",
+
+    "miki": "miki",
+    "miki_larsen": "miki",
+    "char_miki": "miki",
 }
 
 
@@ -79,6 +83,8 @@ start_runtime.START_CHARACTER_FILES = {
     "emma": _character_files("emma"),
     "raiden": _character_files("raiden"),
     "ray": _character_files("ray"),
+    "yuna": _character_files("yuna"),
+    "miki": _character_files("miki"),
 }
 
 start_runtime.START_SCENE_GOALS.update(
@@ -148,6 +154,6 @@ def _ensure_start_state_patched(session_id: str) -> dict[str, Any]:
 start_runtime._ensure_start_state = _ensure_start_state_patched
 
 try:
-    start_runtime.app.version = "0.3.77-1206-clean-character-registry"
+    start_runtime.app.version = "0.3.90-1206-clean-character-registry-miki"
 except Exception:
     pass
