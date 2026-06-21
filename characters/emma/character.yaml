@@ -58,3 +58,14 @@ forbidden:
   - "не писать, что она знает план Джуна про Восточный сектор"
   - "не писать, что она знает про записку"
   - "не писать, что она знает о потере памяти Райдена"
+
+relationship_rules_v5:
+  to_akira_visible_start:
+    from_akira: -2
+    label: "угроза"
+  emma_background:
+    irritation: 35
+    jealousy_or_hidden_sympathy_to_irey: 25
+    note:
+      - "Эмму раздражает сам факт, что Ирэй долго искал/выделял Акиру"
+      - "это фон, не открытая романтика"

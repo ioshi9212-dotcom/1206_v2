@@ -40,3 +40,14 @@ print("\n".join(py_errors) if py_errors else "none")
 
 if missing or bad_existing or py_errors:
     sys.exit(1)
+
+# v5 additional expected files
+extra_expected = [
+    ROOT / "state" / "initial_relationships_1206.json",
+    ROOT / "state" / "akira_status_metrics.json",
+]
+extra_missing = [str(p.relative_to(ROOT)) for p in extra_expected if not p.exists()]
+if extra_missing:
+    print("\nEXTRA MISSING:")
+    print("\n".join(extra_missing))
+    sys.exit(1)
