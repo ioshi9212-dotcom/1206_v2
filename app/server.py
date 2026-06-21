@@ -1,1 +1,1 @@
-from app.actions_wide_alias_runtime_patch import app
+from app.production_runtime_patch import app
