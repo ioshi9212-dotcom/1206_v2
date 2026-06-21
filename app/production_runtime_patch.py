@@ -7,8 +7,9 @@ from app.start_scene_runtime_patch import app
 import app.response_size_guard_runtime_patch as size_guard  # noqa: F401
 import app.pov_switch_runtime_patch as pov_switch  # noqa: F401
 import app.character_registry_runtime_patch as character_registry  # noqa: F401
+import app.lean_context_loading_runtime_patch as lean_context  # noqa: F401
 
-app.version = "0.3.77-1206-production-clean-characters"
+app.version = "0.3.90-1206-production-lean-context-v9"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:

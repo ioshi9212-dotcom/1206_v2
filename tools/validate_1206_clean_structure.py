@@ -58,3 +58,21 @@ if not v8_expected.exists():
     print("\nV8 MISSING:")
     print(v8_expected.relative_to(ROOT))
     sys.exit(1)
+
+# v9 expected files
+for rel in [
+    "app/lean_context_loading_runtime_patch.py",
+    "state/context_loading_rules_1206.json",
+    "state/east_sector_1206_context.json",
+    "characters/miki/main.yaml",
+    "characters/miki/character.yaml",
+    "characters/miki/past.yaml",
+    "characters/yuna/main.yaml",
+    "characters/yuna/character.yaml",
+    "characters/yuna/past.yaml",
+]:
+    p = ROOT / rel
+    if not p.exists():
+        print("\nV9 MISSING:")
+        print(rel)
+        sys.exit(1)
