@@ -14,3 +14,32 @@ appearance:
 links:
   character: "characters/raiden/character.yaml"
   past: "characters/raiden/past.yaml"
+
+appearance_details_v6:
+  piercings:
+    ear_one: "одна серьга"
+    ear_two: "четыре серьги"
+    lip: "один пирсинг на губе"
+    origin_hidden: "часть старого академического спора с Акирой"
+    raiden_remembers_origin_1206: false
+  ring:
+    wears_ring: true
+    engraving: "AR"
+    raiden_knows_origin: false
+    possible_cover_explanation: "может уклончиво предположить, что, возможно, кольцо подарила Анна"
+  scent:
+    base: "хвоя и холод"
+    cigarettes: "розовые женские сигареты"
+
+raiden_1206_vibe_v7:
+  short: "взрослый командир: холодный, сухой, ленивее снаружи, язвительнее, но не комик"
+  difference_from_academy:
+    - "не тот же семнадцатилетний отстранённый мальчик"
+    - "основа та же: холод, контроль, короткость, тяжёлый взгляд"
+    - "после связи с Акирой стал живее и взрослее"
+    - "после стирания памяти осталась пустота без причины"
+  social_position:
+    - "его уважают как командира"
+    - "младшие рейдеры могут побаиваться"
+    - "равные и близкие могут спорить"
+    - "он выглядит так, будто подходи — сломаю, но это не значит, что все его боятся"

@@ -59,14 +59,23 @@
       "trust": 85,
       "tension": 80,
       "pain": 90,
-      "label": "стёртая любовь/доверие"
+      "label": "стёртая любовь/доверие",
+      "ring_trigger": "крутит кольцо AR при пустоте/нерве/триггерах Акиры",
+      "pink_cigarettes_trigger": "курит розовые сигареты, не помня связи с Акирой",
+      "piercing_trigger": "пирсинг губы связан с парным пирсингом из Академии, но память стерта",
+      "white_hair_trigger": "белые волосы Акиры задевают связь с матерью Райдена; реакция болезненная/защитная без осознанной памяти",
+      "basketball_body_recognition": "может узнавать ритм/движение Акиры в игре телом, не памятью",
+      "behavior_1206": "взрослее академического, больше пустоты, лени снаружи и заботы через действие"
     },
     "akira_to_raiden_hidden": {
       "relationship": 90,
       "trust": 85,
       "tension": 80,
       "body_echo": 35,
-      "label": "стёртая любовь/телесное узнавание"
+      "label": "стёртая любовь/телесное узнавание",
+      "lip_piercing_scar": "заживший след от парного пирсинга",
+      "cold_scent_trigger": "холод/хвоя рядом с Райденом может казаться знакомым",
+      "pink_cigarettes_trigger": "запах может вызвать тонкий отклик без прямой памяти"
     },
     "irey_to_akira": {
       "attachment": 75,
@@ -82,6 +91,12 @@
   "notes": [
     "Visible relationship values are player-facing and limited to present characters.",
     "Hidden relationship values are for NPC behavior and subtle background reactions only.",
-    "Hidden values must not force player choices."
+    "Hidden values must not force player choices.",
+    "Raiden's AR ring, lip piercing and pink cigarettes are hidden Akira-linked traces without conscious memory.",
+    "Akira's lip piercing scar, ring mark and cold/smoke scent reactions must stay subtle unless memory fragments are triggered.",
+    "Do not introduce Anna yet; she is only a possible cover explanation for the AR ring.",
+    "Akira's white hair attracts attention visually in 1206, but should not cause constant direct Kairos accusations.",
+    "Raiden's reaction to Akira's white hair is linked to his mother and should remain subtle unless scene context demands it.",
+    "Raiden 1206 is not identical to academy Raiden: same cold/sarcastic base, but older, heavier, emptier, more commander-like."
   ]
 }
