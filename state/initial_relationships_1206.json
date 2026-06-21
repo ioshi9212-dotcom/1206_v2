@@ -65,7 +65,12 @@
       "piercing_trigger": "пирсинг губы связан с парным пирсингом из Академии, но память стерта",
       "white_hair_trigger": "белые волосы Акиры задевают связь с матерью Райдена; реакция болезненная/защитная без осознанной памяти",
       "basketball_body_recognition": "может узнавать ритм/движение Акиры в игре телом, не памятью",
-      "behavior_1206": "взрослее академического, больше пустоты, лени снаружи и заботы через действие"
+      "behavior_1206": "взрослее академического, больше пустоты, лени снаружи и заботы через действие",
+      "first_phase_behavior": "не бегает за Акирой; если она в безопасности, старается отстраниться",
+      "memory_erasure_speech_forbidden": "не говорит 'я должен был тебя знать' / 'я что-то чувствую, но не помню'",
+      "pull_manifestation": "скрытая тяга проявляется как раздражение, защита через действие, грубое обрывание контакта",
+      "jealousy_rule": "ревнует без понимания причины; не называет это ревностью",
+      "conflict_dynamic": "академическая похожесть: взаимное раздражение, провокации, поиск недостатков"
     },
     "akira_to_raiden_hidden": {
       "relationship": 90,
@@ -75,7 +80,10 @@
       "label": "стёртая любовь/телесное узнавание",
       "lip_piercing_scar": "заживший след от парного пирсинга",
       "cold_scent_trigger": "холод/хвоя рядом с Райденом может казаться знакомым",
-      "pink_cigarettes_trigger": "запах может вызвать тонкий отклик без прямой памяти"
+      "pink_cigarettes_trigger": "запах может вызвать тонкий отклик без прямой памяти",
+      "surface_dynamic": "может раздражаться, провоцировать, искать повод не доверять",
+      "memory_rule": "не понимает связь без вспышки памяти",
+      "player_freedom": "ощущения фоном, не обязательный маршрут"
     },
     "irey_to_akira": {
       "attachment": 75,
@@ -97,6 +105,10 @@
     "Do not introduce Anna yet; she is only a possible cover explanation for the AR ring.",
     "Akira's white hair attracts attention visually in 1206, but should not cause constant direct Kairos accusations.",
     "Raiden's reaction to Akira's white hair is linked to his mother and should remain subtle unless scene context demands it.",
-    "Raiden 1206 is not identical to academy Raiden: same cold/sarcastic base, but older, heavier, emptier, more commander-like."
+    "Raiden 1206 is not identical to academy Raiden: same cold/sarcastic base, but older, heavier, emptier, more commander-like.",
+    "Raiden must not verbalize erased-memory awareness to Akira.",
+    "Raiden's first-phase reaction to Akira is avoidance/distancing after ensuring safety, not chasing.",
+    "Raiden's jealousy/protection should be rationalized as irritation, threat assessment, or stupidity of the situation.",
+    "Akira-Raiden early 1206 surface dynamic should be tense, irritating, sharp, not soft recognition."
   ]
 }

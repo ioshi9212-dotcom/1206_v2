@@ -51,3 +51,10 @@ if extra_missing:
     print("\nEXTRA MISSING:")
     print("\n".join(extra_missing))
     sys.exit(1)
+
+# v8 additional expected file
+v8_expected = ROOT / "state" / "raiden_akira_dynamic_rules.json"
+if not v8_expected.exists():
+    print("\nV8 MISSING:")
+    print(v8_expected.relative_to(ROOT))
+    sys.exit(1)
