@@ -32,11 +32,11 @@ for p in py_files:
             py_errors.append(f"{p.relative_to(ROOT)}: {exc}")
 
 print("MISSING:")
-print("\\n".join(missing) if missing else "none")
-print("\\nBAD PATHS:")
-print("\\n".join(bad_existing) if bad_existing else "none")
-print("\\nPY ERRORS:")
-print("\\n".join(py_errors) if py_errors else "none")
+print("\n".join(missing) if missing else "none")
+print("\nBAD PATHS:")
+print("\n".join(bad_existing) if bad_existing else "none")
+print("\nPY ERRORS:")
+print("\n".join(py_errors) if py_errors else "none")
 
 if missing or bad_existing or py_errors:
     sys.exit(1)
