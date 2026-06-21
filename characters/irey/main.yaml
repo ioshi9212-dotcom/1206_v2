@@ -1,0 +1,15 @@
+id: char_irey
+name:
+  first: "Ирэй"
+  last: null
+  surname_status: "pending"
+basic_info:
+  height_cm: 181
+story:
+  setting: "1206"
+  role: "чистокровный Кайрос, связанный с системой Самуэля, ищет Акиру"
+appearance:
+  impression: "белые волосы, холодная светлая внешность, тихая отстранённость"
+links:
+  character: "characters/irey/character.yaml"
+  past: "characters/irey/past.yaml"

@@ -1,2 +1,19 @@
-id: jun
-short_card: "Джун: краткая карточка пока не заполнена."
+id: char_jun
+name:
+  first: "Джун"
+  last: "Картер"
+  full: "Джун Картер"
+display:
+  known_name: "Джун"
+  unknown_name: "мужчина"
+story:
+  setting: "1206"
+  role: "бывший командующий, отец/опекун Акиры"
+appearance:
+  impression: "зрелый, сильный, строгий, бывший командующий"
+  forbidden:
+    - "не делать дряхлым"
+    - "не делать слабым мямлей"
+links:
+  character: "characters/jun/character.yaml"
+  past: "characters/jun/past.yaml"

@@ -1,2 +1,37 @@
-id: akira
-short_card: "Акира: краткая карточка пока не заполнена."
+id: char_akira
+name:
+  first: "Акира"
+  current_documents: "Акира Агатсуми"
+  hidden_old_family_name: "Картер"
+  aliases: ["Акира", "Агатсуми"]
+display:
+  known_name: "Акира"
+  unknown_name: "беловолосая девушка"
+  documents_name: "Акира Агатсуми"
+story:
+  setting: "1206"
+  role: "player_character"
+  pov_character: true
+basic_info:
+  age: 25
+  birthday: "6 июня"
+  height_cm: 165
+  gender: "female"
+appearance:
+  hair:
+    color: "платиново-белые"
+    current_length: "длинные, отросшие за два года"
+    current_bangs: false
+    past_2_5_years_ago: "ниже плеч, с чёлкой"
+  eyes:
+    color: "карие, почти чёрные"
+    light_effect: "на свету янтарно-красноватые"
+    forbidden: "не делать светлыми"
+  impression_1206:
+    - "холодная"
+    - "тихая"
+    - "почти безэмоциональная"
+    - "собранная"
+links:
+  character: "characters/akira/character.yaml"
+  past: "characters/akira/past.yaml"

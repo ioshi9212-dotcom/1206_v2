@@ -1,0 +1,11 @@
+id: char_emma
+name:
+  first: "Эмма"
+story:
+  setting: "1206"
+  role: "Кайрос под системой Самуэля, пришла с Ирэем"
+appearance:
+  impression: "белые волосы, жёсткая, давящая, напряжённая"
+links:
+  character: "characters/emma/character.yaml"
+  past: "characters/emma/past.yaml"
