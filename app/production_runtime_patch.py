@@ -5,8 +5,9 @@ from typing import Any
 import app.start_scene_runtime_patch as start_runtime
 from app.start_scene_runtime_patch import app
 import app.response_size_guard_runtime_patch as size_guard  # noqa: F401
+import app.pov_switch_runtime_patch as pov_switch  # noqa: F401
 
-app.version = "0.3.71-1206-production-start-sizeguard"
+app.version = "0.3.74-1206-production-timefix-pov-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:

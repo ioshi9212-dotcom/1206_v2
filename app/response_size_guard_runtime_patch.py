@@ -386,6 +386,8 @@ def _small_output_contract() -> dict[str, Any]:
         "rules": [
             "Final gameplay answer must be the scene only, not API/status/debug summary.",
             "Use 1206 scene header and current state/calendar location/time.",
+            "Do not advance time by +1 minute by default. Time advances by actual scene duration: same minute for a quick beat, +2-3 for a short conversation/search/movement, +5-10 or long_transition for longer transitions.",
+            "If visible scene content already covers 2-3 minutes, save a 2-3 minute time shift in state instead of only +1 minute.",
             "Scene-specific bans and permissions must come from the current day/scenes file, not from global rules.",
             "Calendar day goals are character intentions, not guaranteed outcomes.",
             "Player controls only Akira; do not invent Akira speech unless written outside parentheses.",
@@ -408,6 +410,7 @@ def _small_prompt_preview(chars: list[str], required_files: list[str]) -> str:
         "PLAY MODE 1206 SIZE-GUARD BRIEF\n"
         "- Load getRequiredFilesManifest, then all getRequiredFilesChunk chunks before rendering.\n"
         "- Render a generated scene from current state/calendar/files; exact first text is optional only if processTurn returns scene_text.\n"
+        "- Time movement: do not tick +1 minute automatically; save actual scene duration (same_minute/+1/+2-3/+5-10/long_transition).\n"
         f"- Focus characters/internal ids: {', '.join(chars)}. Use visible labels when POV does not know names.\n"
         f"- Required files count: {len(required_files)}.\n"
         "- Enforce player action boundary and unanswered hook rule.\n"
