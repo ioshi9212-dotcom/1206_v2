@@ -1,0 +1,9 @@
+id: char_yuna
+name:
+  first: "Юна"
+story:
+  setting: "1206"
+  role: "медик; появляется 31 августа только если Акира сильно ранена"
+links:
+  character: "characters/yuna/character.yaml"
+  past: "characters/yuna/past.yaml"

@@ -1,0 +1,16 @@
+id: char_raiden
+name:
+  first: "Райден"
+  last: "Стэрлинг"
+  full: "Райден Стэрлинг"
+basic_info:
+  height_cm: 195
+  birthday: "31 августа"
+story:
+  setting: "1206"
+  role: "командир седьмого отряда"
+appearance:
+  impression: "очень высокий, сильный, тёмноволосый, тяжёлый и спокойный"
+links:
+  character: "characters/raiden/character.yaml"
+  past: "characters/raiden/past.yaml"

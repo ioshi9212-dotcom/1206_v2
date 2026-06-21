@@ -1,0 +1,7 @@
+id: yuna
+file_type: character_main_profile
+version: "placeholder_v1"
+placeholder: true
+rule:
+  - "полную карточку заполнить позже"
+  - "на 31 августа появляется только при серьёзном ранении Акиры"
