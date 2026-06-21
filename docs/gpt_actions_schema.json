@@ -1,8 +1,9 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Akira Main 1206 API",
-    "version": "1.6.0"
+    "title": "Akira 1206 v2 Actions",
+    "description": "Stable GPT Actions schema for Akira 1206 v2. Use processTurn for the exact first start scene.",
+    "version": "0.3.71-1206-production-start-sizeguard"
   },
   "servers": [
     {
@@ -12,22 +13,19 @@
   "paths": {
     "/health": {
       "get": {
-        "operationId": "healthCheck",
-        "summary": "Check API health",
+        "operationId": "health",
+        "summary": "Check API health and runtime version",
         "responses": {
           "200": {
-            "description": "API is running"
-          }
-        }
-      }
-    },
-    "/debug/volume": {
-      "get": {
-        "operationId": "debugVolume",
-        "summary": "Check Railway volume",
-        "responses": {
-          "200": {
-            "description": "Volume status"
+            "description": "API health status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
           }
         }
       }
@@ -35,16 +33,22 @@
     "/api/v1/sessions": {
       "post": {
         "operationId": "createSession",
-        "summary": "Create or initialize session",
+        "summary": "Create or initialize a gameplay session",
         "requestBody": {
           "required": false,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
+                "additionalProperties": true,
                 "properties": {
                   "session_id": {
-                    "type": "string"
+                    "type": "string",
+                    "default": "main-1206-v2"
+                  },
+                  "title": {
+                    "type": "string",
+                    "default": "Akira 1206 v2"
                   },
                   "reset": {
                     "type": "boolean",
@@ -57,53 +61,15 @@
         },
         "responses": {
           "200": {
-            "description": "Session initialized"
-          }
-        }
-      }
-    },
-    "/api/v1/turn/context": {
-      "post": {
-        "operationId": "getDefaultTurnContext",
-        "summary": "Get default turn context",
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "user_input": {
-                    "type": "string"
-                  },
-                  "mode": {
-                    "type": "string",
-                    "enum": [
-                      "play",
-                      "technical",
-                      "audit",
-                      "transfer"
-                    ],
-                    "default": "play"
-                  },
-                  "include_file_contents": {
-                    "type": "boolean",
-                    "default": true
-                  },
-                  "client_context": {
-                    "type": "object"
-                  }
-                },
-                "required": [
-                  "user_input"
-                ]
+            "description": "Created session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
               }
             }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Turn context"
           }
         }
       }
@@ -111,14 +77,15 @@
     "/api/v1/sessions/{session_id}/turn": {
       "post": {
         "operationId": "processTurn",
-        "summary": "Process first exact scene turn; after start returns compact turn contract",
+        "summary": "Process a gameplay turn. For player_input='начнем', returns the exact first start scene.",
         "parameters": [
           {
             "name": "session_id",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "default": "main-1206-v2"
             }
           }
         ],
@@ -128,18 +95,16 @@
             "application/json": {
               "schema": {
                 "type": "object",
+                "additionalProperties": true,
+                "required": [
+                  "player_input"
+                ],
                 "properties": {
                   "player_input": {
                     "type": "string"
                   },
                   "mode": {
                     "type": "string",
-                    "enum": [
-                      "play",
-                      "technical",
-                      "audit",
-                      "transfer"
-                    ],
                     "default": "play"
                   },
                   "include_file_contents": {
@@ -147,282 +112,149 @@
                     "default": true
                   },
                   "state_patches": {
-                    "type": "object"
+                    "type": "object",
+                    "additionalProperties": true
                   }
-                },
-                "required": [
-                  "player_input"
-                ]
+                }
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Turn processed or compact contract returned"
+            "description": "Processed turn with scene_text or compact contract",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "session_id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "scene_text": {
+                      "type": "string"
+                    },
+                    "scene_packet": {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/context": {
+      "get": {
+        "operationId": "getSessionContext",
+        "summary": "Get compact session context",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "main-1206-v2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Compact session context",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
           }
         }
       }
     },
     "/api/v1/sessions/{session_id}/turn-contract": {
-      "post": {
-        "operationId": "getTurnContract",
-        "summary": "Get compact turn context before scene generation",
-        "parameters": [
-          {
-            "name": "session_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "user_input": {
-                    "type": "string"
-                  },
-                  "mode": {
-                    "type": "string",
-                    "enum": [
-                      "play",
-                      "technical",
-                      "audit",
-                      "transfer"
-                    ],
-                    "default": "play"
-                  },
-                  "include_file_contents": {
-                    "type": "boolean",
-                    "default": true
-                  },
-                  "client_context": {
-                    "type": "object"
-                  }
-                },
-                "required": [
-                  "user_input"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Turn context"
-          }
-        }
-      }
-    },
-    "/api/v1/sessions/{session_id}/turn-result": {
-      "post": {
-        "operationId": "submitTurnResult",
-        "summary": "Save generated scene",
-        "parameters": [
-          {
-            "name": "session_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "scene_id": {
-                    "type": "string",
-                    "default": "scene"
-                  },
-                  "scene_text": {
-                    "type": "string"
-                  },
-                  "technical": {
-                    "type": "boolean",
-                    "default": false
-                  },
-                  "state_patches": {
-                    "type": "object"
-                  },
-                  "current_state_changes": {
-                    "type": "object"
-                  },
-                  "story_lines_changes": {
-                    "type": "object"
-                  },
-                  "relationship_changes": {
-                    "type": "object"
-                  },
-                  "knowledge_changes": {
-                    "type": "object"
-                  },
-                  "reputation_changes": {
-                    "type": "object"
-                  },
-                  "rumor_changes": {
-                    "type": "object"
-                  },
-                  "inventory_changes": {
-                    "type": "object"
-                  },
-                  "power_changes": {
-                    "type": "object"
-                  }
-                },
-                "required": [
-                  "scene_text"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Turn saved"
-          }
-        }
-      }
-    },
-    "/api/v1/sessions/{session_id}/apply-turn-result": {
-      "post": {
-        "operationId": "applyTurnResult",
-        "summary": "Compatibility save endpoint",
-        "parameters": [
-          {
-            "name": "session_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "scene_id": {
-                    "type": "string",
-                    "default": "scene"
-                  },
-                  "scene_text": {
-                    "type": "string"
-                  },
-                  "technical": {
-                    "type": "boolean",
-                    "default": false
-                  },
-                  "state_patches": {
-                    "type": "object"
-                  },
-                  "current_state_changes": {
-                    "type": "object"
-                  },
-                  "story_lines_changes": {
-                    "type": "object"
-                  },
-                  "relationship_changes": {
-                    "type": "object"
-                  },
-                  "knowledge_changes": {
-                    "type": "object"
-                  },
-                  "reputation_changes": {
-                    "type": "object"
-                  },
-                  "rumor_changes": {
-                    "type": "object"
-                  },
-                  "inventory_changes": {
-                    "type": "object"
-                  },
-                  "power_changes": {
-                    "type": "object"
-                  }
-                },
-                "required": [
-                  "scene_text"
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Turn saved"
-          }
-        }
-      }
-    },
-    "/api/v1/sessions/{session_id}/required-files/manifest": {
       "get": {
-        "operationId": "getRequiredFilesManifest",
-        "summary": "Get ordered required file manifest",
+        "operationId": "getSessionTurnContract",
+        "summary": "Get compact turn contract",
         "parameters": [
           {
             "name": "session_id",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "user_input",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "mode",
-            "in": "query",
-            "required": false,
             "schema": {
               "type": "string",
-              "enum": [
-                "play",
-                "technical",
-                "audit",
-                "transfer"
-              ],
-              "default": "play"
+              "default": "main-1206-v2"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Required files manifest"
+            "description": "Turn contract",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
           }
         }
       }
     },
-    "/api/v1/sessions/{session_id}/required-files/chunk": {
+    "/api/v1/sessions/{session_id}/required-files-manifest": {
       "get": {
-        "operationId": "getRequiredFilesChunk",
-        "summary": "Read required files by chunks",
+        "operationId": "getRequiredFilesManifest",
+        "summary": "Get required files manifest and chunk count",
         "parameters": [
           {
             "name": "session_id",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "default": "main-1206-v2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Required files manifest",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/required-files-chunk": {
+      "get": {
+        "operationId": "getRequiredFilesChunk",
+        "summary": "Get one chunk of required file contents",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "main-1206-v2"
             }
           },
           {
@@ -440,7 +272,7 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "default": 60000
+              "default": 30000
             }
           },
           {
@@ -449,57 +281,172 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "default": 6
-            }
-          },
-          {
-            "name": "user_input",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "mode",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "enum": [
-                "play",
-                "technical",
-                "audit",
-                "transfer"
-              ],
-              "default": "play"
+              "default": 3
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Required files chunk"
+            "description": "Required files chunk",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
           }
         }
       }
     },
-    "/api/v1/files/{file_path}": {
+    "/api/v1/sessions/{session_id}/required-files-bundle": {
       "get": {
-        "operationId": "readProjectFile",
-        "summary": "Read repository or runtime file",
+        "operationId": "getRequiredFilesBundle",
+        "summary": "Backward-compatible required files chunk endpoint",
         "parameters": [
           {
-            "name": "file_path",
+            "name": "session_id",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string"
+              "type": "string",
+              "default": "main-1206-v2"
+            }
+          },
+          {
+            "name": "chunk_index",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "max_chars",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 30000
+            }
+          },
+          {
+            "name": "max_items",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 3
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "File content"
+            "description": "Required files chunk",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/scene-packet": {
+      "get": {
+        "operationId": "getScenePacket",
+        "summary": "Get compact scene packet",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "main-1206-v2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scene packet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/apply-turn-result": {
+      "post": {
+        "operationId": "applyTurnResult",
+        "summary": "Apply meaningful scene changes to session state",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "main-1206-v2"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "turn_file": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "visible_scene_text": {
+                    "type": "string"
+                  },
+                  "scene_text": {
+                    "type": "string"
+                  },
+                  "state_patches": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Apply result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
           }
         }
       }
