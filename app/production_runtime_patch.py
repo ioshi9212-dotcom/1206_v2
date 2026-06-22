@@ -8,10 +8,11 @@ import app.response_size_guard_runtime_patch as size_guard  # noqa: F401
 import app.pov_switch_runtime_patch as pov_switch  # noqa: F401
 import app.character_registry_runtime_patch as character_registry  # noqa: F401
 import app.lean_context_loading_runtime_patch as lean_context  # noqa: F401
+import app.akira_spatial_water_trigger_runtime_patch as akira_water_trigger  # noqa: F401
 import app.state_persistence_runtime_patch as state_persistence  # noqa: F401
 import app.state_memory_relationship_context_runtime_patch as state_memory_context  # noqa: F401
 
-app.version = "0.3.101-1206-production-state-memory-v13"
+app.version = "0.3.104-1206-production-akira-spatial-water-trigger"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
