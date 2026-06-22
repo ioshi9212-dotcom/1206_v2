@@ -1,6 +1,6 @@
 {
-  "schema": "player_input_parsing_rules_v12",
-  "principle": "Parse player input as ordered sequence, not as a wish that rewrites the scene.",
+  "schema": "player_input_parsing_rules_v13_akira_pov_limits",
+  "principle": "Parse player input as ordered sequence, not as a wish that rewrites the scene. Render the result through Akira's current perception and knowledge.",
   "syntax": {
     "outside_parentheses": "Akira's spoken line",
     "inside_parentheses": "Akira's action, thought, pause, intention, body state, or observation",
@@ -13,6 +13,22 @@
     "NPCs may act/speak during actions and pauses.",
     "Thoughts do not trigger external events by themselves."
   ],
+  "pov_rule": {
+    "core": "Parentheses may include Akira's thoughts, but visible narration must not upgrade those thoughts into hidden facts or omniscient conclusions.",
+    "can_show": [
+      "what Akira sees/hears/feels",
+      "what she suspects",
+      "what she has heard in scene",
+      "dry internal evaluation and sarcasm"
+    ],
+    "cannot_show_as_fact": [
+      "what an NPC understood internally",
+      "why an NPC reacted unless visible/known",
+      "terms Akira has not heard yet",
+      "that a stranger failed to call her by name when he has no reason to know it",
+      "hidden lore, erased memory, relationship truth, or correct labels from repo/card"
+    ]
+  },
   "thought_rule": {
     "thought_is_not_world_command": true,
     "description": "If Akira thinks about something, it does not mean the world must answer, reveal, arrive, or happen.",
@@ -37,12 +53,16 @@
       "Akira has an internal thought/pause",
       "NPC may react to the look/pause",
       "Akira says: Ты кто?"
-    ]
+    ],
+    "pov_bad": "Ирэй понял, что Райден её не узнал.",
+    "pov_good": "Ирэй слишком быстро посмотрел на Джуна. Что он понял — его проблема."
   },
   "forbidden": [
     "do_not_treat_parentheses_thoughts_as_spoken",
     "do_not_make_unspoken_thoughts_cause_events",
     "do_not_skip_sequence_order",
-    "do_not_freeze_npcs_during_parentheses"
+    "do_not_freeze_npcs_during_parentheses",
+    "do_not_write_omniscient_narrator_conclusions",
+    "do_not_use_unknown_terms_in_akira_pov"
   ]
 }
