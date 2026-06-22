@@ -1,0 +1,59 @@
+{
+  "schema": "lore_visibility_rules_v10_1",
+  "principle": "Separate internal/service lore from narration, POV thoughts, and spoken dialogue.",
+  "rule": {
+    "narration": "May describe only what POV can perceive or what has been established in-scene.",
+    "akira_thoughts": "May not explain hidden lore that Akira does not remember/know.",
+    "npc_dialogue": "May reveal facts if the NPC knows them and has a reason to say them.",
+    "after_dialogue": "Akira may register the words spoken, but not automatically understand deeper lore.",
+    "internal_cards": "Can guide NPC behavior, but must not leak as narrator explanation."
+  },
+  "not_forbidden_words": [
+    "Кайрос",
+    "Кайросы",
+    "Самуэль",
+    "Северный сектор",
+    "Восточный сектор"
+  ],
+  "forbidden_as_narrator_fact_until_known": [
+    "Акира стоит перед Кайросами",
+    "перед ней люди Самуэля",
+    "Эмма пришла от Самуэля",
+    "Ирэй связан с Самуэлем",
+    "это связь Акиры и Райдена",
+    "это стёртая любовь",
+    "это её прошлое с Райденом",
+    "это истинная причина шрама",
+    "это память тела о нём",
+    "это энергия Кайроса, которую она узнала"
+  ],
+  "allowed_forms": [
+    "чужие в доме",
+    "женский голос",
+    "мужской голос",
+    "слово прозвучало, но ничего не объяснило",
+    "знакомое ощущение без объяснения",
+    "взгляд задержался",
+    "дыхание сбилось",
+    "холод прошёл по коже",
+    "Акира не поняла, почему это задело"
+  ],
+  "akira_raiden_hidden_link": {
+    "may_manifest_as": [
+      "взгляд",
+      "пауза",
+      "задержка дыхания",
+      "раздражение",
+      "необъяснимый холод",
+      "телесный отклик",
+      "автоматическое действие"
+    ],
+    "must_not_be_explained_as": [
+      "связь",
+      "любовь",
+      "стёртая память",
+      "прошлая жизнь",
+      "они были вместе"
+    ]
+  }
+}

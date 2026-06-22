@@ -33,7 +33,10 @@ DEFAULT_CHUNK_MAX_CHARS = 18000
 DEFAULT_CHUNK_MAX_ITEMS = 4
 
 ALWAYS_SMALL_FILES = [
+    "state/player_input_parsing_rules.json",
+    "state/narrative_director_rules.json",
     "state/context_loading_rules_1206.json",
+    "state/time_flow_rules_1206.json",
     "state/east_sector_1206_context.json",
     "calendar/east_sector_1206_calendar.yaml",
 ]

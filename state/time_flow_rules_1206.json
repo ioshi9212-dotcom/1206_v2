@@ -1,0 +1,82 @@
+{
+  "schema": "time_flow_rules_1206_v11",
+  "principle": "time follows actual scene actions, not turn count",
+  "rule": {
+    "not_per_turn": "Do not use one turn equals one minute.",
+    "advance_by_content": "Advance time by the real amount implied by actions, dialogue, pauses, travel and waiting.",
+    "silence_counts": "If the player waits, stands silently, watches, listens or deliberately delays, time must move.",
+    "npc_actions_count": "NPC dialogue/actions between player inputs also advance time.",
+    "no_freeze": "Do not keep time fixed unless the scene explicitly contains instant/near-instant reaction."
+  },
+  "estimates_seconds": {
+    "quick_glance": [
+      1,
+      3
+    ],
+    "short_line": [
+      3,
+      8
+    ],
+    "one_sentence_reply": [
+      5,
+      15
+    ],
+    "two_to_four_line_exchange": [
+      20,
+      60
+    ],
+    "long_tense_exchange": [
+      120,
+      300
+    ],
+    "silent_pause": [
+      20,
+      90
+    ],
+    "deliberate_wait": [
+      60,
+      300
+    ],
+    "scan_room": [
+      20,
+      90
+    ],
+    "search_small_item": [
+      30,
+      120
+    ],
+    "get_dressed_fast": [
+      120,
+      300
+    ],
+    "move_inside_house": [
+      20,
+      90
+    ],
+    "stairs": [
+      30,
+      120
+    ],
+    "short_fight_or_scuffle": [
+      20,
+      120
+    ]
+  },
+  "format_rule": {
+    "current_time": "After each scene, update current_time if enough seconds accumulate.",
+    "rounding": "Round to nearest plausible minute only after accumulating seconds; do not lose seconds.",
+    "hidden_accumulator": "Keep unrounded seconds in state if available."
+  },
+  "start_scene_anchor": {
+    "date": "1206-08-31",
+    "time": "02:40",
+    "warning": "By the time several replies, looks, pauses and movement happen, 02:43-02:45 may be plausible."
+  },
+  "forbidden": [
+    "do_not_advance_only_one_minute_per_turn",
+    "do_not_ignore_dialogue_duration",
+    "do_not_ignore_player_waiting",
+    "do_not_freeze_time_during_silence",
+    "do_not_reset_to_anchor_time_after_each_output"
+  ]
+}

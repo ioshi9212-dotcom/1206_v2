@@ -25,6 +25,16 @@
     "do_not_dump_all_required_files_in_turn_contract",
     "do_not_load_all_characters",
     "do_not_use_hidden_lore_as_npc_knowledge",
-    "do_not_create_new_locations_without_grounding"
-  ]
+    "do_not_create_new_locations_without_grounding",
+    "do_not_expose_hidden_lore_as_narrator_fact",
+    "do_not_explain_akira_raiden_hidden_link_in_narration",
+    "do_not_put_unknown_lore_into_akira_thoughts"
+  ],
+  "lore_visibility_rules_v10_1": {
+    "not_word_ban": "Words like Kairos/Samuel are not banned in dialogue.",
+    "narration_rule": "Do not expose lore as narrator fact if POV does not know it.",
+    "akira_thought_rule": "Do not explain hidden lore in Akira's thoughts before memory/scene evidence.",
+    "npc_dialogue_rule": "NPCs may say known/common words naturally.",
+    "hidden_link_rule": "Akira-Raiden hidden link can manifest through effects, never narrator explanation."
+  }
 }
