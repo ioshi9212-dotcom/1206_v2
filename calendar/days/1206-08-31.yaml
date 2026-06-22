@@ -275,3 +275,22 @@ director_input_rules_v12:
     - "меньше литературной воды"
     - "больше видимого/слышимого/телесного"
     - "не форсировать драму без логики календаря"
+
+state_memory_v13:
+  rule:
+    - "после каждого meaningful turn обновлять relationships/knowledge/current_state/scene_history"
+    - "каждый персонаж помнит только свою сторону события"
+    - "мысли Акиры не становятся знанием NPC"
+    - "отношения влияют на дальнейшее поведение персонажей"
+    - "в контекст тянуть только active/nearby/speaking/explicit пары"
+  active_start_pairs:
+    - "akira__jun"
+    - "akira__irey"
+    - "akira__emma"
+    - "jun__irey"
+    - "jun__emma"
+    - "irey__emma"
+  do_not_load_by_default:
+    - "akira__raiden если Райдена нет в сцене"
+    - "akira__ray если Рэя нет в сцене"
+    - "ray__raiden если оба вне сцены"

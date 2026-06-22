@@ -94,3 +94,14 @@ for rel in [
         print("\nV12 MISSING:")
         print(rel)
         sys.exit(1)
+
+# v13 expected state memory relationship files
+for rel in [
+    "app/state_memory_relationship_context_runtime_patch.py",
+    "state/relationship_memory_rules_1206.json",
+]:
+    p = ROOT / rel
+    if not p.exists():
+        print("\nV13 MISSING:")
+        print(rel)
+        sys.exit(1)
