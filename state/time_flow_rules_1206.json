@@ -1,12 +1,52 @@
 {
-  "schema": "time_flow_rules_1206_v11",
-  "principle": "time follows actual scene actions, not turn count",
+  "schema": "time_flow_rules_1206_v15_targeted",
+  "principle": "time follows the whole scene and all active characters, not only Akira's action and not turn count",
   "rule": {
     "not_per_turn": "Do not use one turn equals one minute.",
-    "advance_by_content": "Advance time by the real amount implied by actions, dialogue, pauses, travel and waiting.",
-    "silence_counts": "If the player waits, stands silently, watches, listens or deliberately delays, time must move.",
-    "npc_actions_count": "NPC dialogue/actions between player inputs also advance time.",
-    "no_freeze": "Do not keep time fixed unless the scene explicitly contains instant/near-instant reaction."
+    "not_only_akira": "Do not calculate time only from Akira's explicit action.",
+    "advance_by_whole_scene": "Advance time by all visible/nearby scene activity: Akira's actions, Akira's thoughts/pauses, NPC speech, NPC actions, pauses, pressure, movement, waiting, and consequences.",
+    "parallel_activity_counts": "If Akira is occupied for one minute, NPCs are not frozen; they may act/speak during that minute, and further exchanges after that add more time.",
+    "silence_counts": "If Akira pauses/thinks/waits/listens, the scene continues and NPCs may spend time acting.",
+    "npc_actions_count": "NPC dialogue, movement, energy use, hesitation, argument and reaction pauses count toward scene duration.",
+    "no_freeze": "Do not keep time fixed unless the scene explicitly contains instant/near-instant reaction.",
+    "header_time_is_scene_end": "The time shown in the scene header/status must be the time reached by the END of the generated scene, not the time at the beginning of the turn.",
+    "state_time_update": "current_time/current_scene_time must be updated to scene_end_time after the output."
+  },
+  "scene_clock": {
+    "start_time": "time at beginning of processed turn",
+    "scene_duration": "all seconds/minutes consumed by the generated scene, including NPC actions",
+    "scene_end_time": "start_time + scene_duration",
+    "header_rule": "Use scene_end_time in the header/top status after generation.",
+    "bottom_status_rule": "If there is a status block, it must also reflect scene_end_time.",
+    "do_not_show": "Do not show the old start_time as current time after several in-scene actions happened."
+  },
+  "all_participants_count": {
+    "akira": [
+      "spoken lines",
+      "actions in parentheses",
+      "thought-pauses",
+      "hesitation",
+      "movement",
+      "waiting/listening"
+    ],
+    "npcs": [
+      "speech",
+      "interruptions",
+      "arguments",
+      "energy use",
+      "movement",
+      "reaction pauses",
+      "attempts to pressure/stop/protect",
+      "off-screen but nearby actions if they affect the scene"
+    ],
+    "environment": [
+      "doors opening/closing",
+      "steps",
+      "vehicles approaching",
+      "alarms/signals",
+      "waiting for someone to arrive",
+      "searching or preparing objects"
+    ]
   },
   "estimates_seconds": {
     "quick_glance": [
@@ -60,23 +100,37 @@
     "short_fight_or_scuffle": [
       20,
       120
+    ],
+    "npc_energy_pressure_or_threat": [
+      15,
+      90
+    ],
+    "multi_character_argument": [
+      120,
+      300
     ]
   },
-  "format_rule": {
-    "current_time": "After each scene, update current_time if enough seconds accumulate.",
-    "rounding": "Round to nearest plausible minute only after accumulating seconds; do not lose seconds.",
-    "hidden_accumulator": "Keep unrounded seconds in state if available."
+  "duration_composition_examples": {
+    "bad": "Akira acted for 1 minute, therefore total scene time is 1 minute.",
+    "good": "Akira acted for 1 minute, then Emma spoke, Irey intervened, Jun paused and moved, so total scene time is 3-4 minutes.",
+    "header_bad": "Header repeats the old start time.",
+    "header_good": "Header shows the time reached after the scene's actions."
   },
   "start_scene_anchor": {
     "date": "1206-08-31",
     "time": "02:40",
-    "warning": "By the time several replies, looks, pauses and movement happen, 02:43-02:45 may be plausible."
+    "warning": "02:40 is only the start anchor. After several replies, looks, pauses, NPC actions and movement, 02:43-02:47 may be plausible."
   },
   "forbidden": [
     "do_not_advance_only_one_minute_per_turn",
+    "do_not_count_only_akira_action",
+    "do_not_freeze_other_characters_while_akira_thinks_or_waits",
     "do_not_ignore_dialogue_duration",
+    "do_not_ignore_npc_action_time",
+    "do_not_ignore_npc_dialogue_time",
     "do_not_ignore_player_waiting",
-    "do_not_freeze_time_during_silence",
+    "do_not_make_every_turn_plus_one_minute",
+    "do_not_put_start_time_in_header_after_scene",
     "do_not_reset_to_anchor_time_after_each_output"
   ]
 }
