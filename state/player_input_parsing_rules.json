@@ -1,6 +1,6 @@
 {
-  "schema": "player_input_parsing_rules_v13_akira_pov_limits",
-  "principle": "Parse player input as ordered sequence, not as a wish that rewrites the scene. Render the result through Akira's current perception and knowledge.",
+  "schema": "player_input_parsing_rules_v14_akira_pov_inventory_guard",
+  "principle": "Parse player input as ordered sequence, not as a wish that rewrites the scene. Render the result through Akira's current perception and knowledge. Do not leak Akira inventory/state into NPC knowledge.",
   "syntax": {
     "outside_parentheses": "Akira's spoken line",
     "inside_parentheses": "Akira's action, thought, pause, intention, body state, or observation",
@@ -29,6 +29,28 @@
       "hidden lore, erased memory, relationship truth, or correct labels from repo/card"
     ]
   },
+  "concealed_inventory_rule": {
+    "state_is_not_npc_knowledge": true,
+    "core": "If Akira hides an item in parentheses or it exists in inventory/state, NPCs cannot automatically identify it by exact name.",
+    "npc_can_name_item_only_if": [
+      "item is visible/exposed",
+      "Akira drew/used it",
+      "someone said its name aloud",
+      "NPC already knew that exact item from a visible or recorded source",
+      "NPC has explicit perception ability for identifying concealed objects and the scene uses it"
+    ],
+    "if_only_shape_is_visible_npc_may_say": [
+      "что-то",
+      "предмет",
+      "оружие, если поза/форма это разумно предполагают",
+      "то, что спрятано",
+      "то, что у тебя за поясом",
+      "достань это",
+      "руку от пояса"
+    ],
+    "forbidden_example": "Эмма: Без ножниц — when scissors are hidden and unseen.",
+    "allowed_example": "Эмма: Без того, что ты спрятала за поясом."
+  },
   "thought_rule": {
     "thought_is_not_world_command": true,
     "description": "If Akira thinks about something, it does not mean the world must answer, reveal, arrive, or happen.",
@@ -55,7 +77,9 @@
       "Akira says: Ты кто?"
     ],
     "pov_bad": "Ирэй понял, что Райден её не узнал.",
-    "pov_good": "Ирэй слишком быстро посмотрел на Джуна. Что он понял — его проблема."
+    "pov_good": "Ирэй слишком быстро посмотрел на Джуна. Что он понял — его проблема.",
+    "inventory_bad": "Эмма говорит 'ножницы', хотя видела только деформацию ткани.",
+    "inventory_good": "Эмма говорит 'то, что у тебя за поясом'."
   },
   "forbidden": [
     "do_not_treat_parentheses_thoughts_as_spoken",
@@ -63,6 +87,7 @@
     "do_not_skip_sequence_order",
     "do_not_freeze_npcs_during_parentheses",
     "do_not_write_omniscient_narrator_conclusions",
-    "do_not_use_unknown_terms_in_akira_pov"
+    "do_not_use_unknown_terms_in_akira_pov",
+    "do_not_leak_hidden_inventory_exact_names_to_npc_dialogue"
   ]
 }
