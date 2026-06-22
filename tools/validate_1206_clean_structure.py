@@ -76,3 +76,21 @@ for rel in [
         print("\nV9 MISSING:")
         print(rel)
         sys.exit(1)
+
+# v11 expected time-flow file
+v11_expected = ROOT / "state" / "time_flow_rules_1206.json"
+if not v11_expected.exists():
+    print("\nV11 MISSING:")
+    print(v11_expected.relative_to(ROOT))
+    sys.exit(1)
+
+# v12 expected director/input/style files
+for rel in [
+    "state/player_input_parsing_rules.json",
+    "state/narrative_director_rules.json",
+]:
+    p = ROOT / rel
+    if not p.exists():
+        print("\nV12 MISSING:")
+        print(rel)
+        sys.exit(1)

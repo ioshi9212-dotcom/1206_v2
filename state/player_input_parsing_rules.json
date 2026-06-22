@@ -1,0 +1,48 @@
+{
+  "schema": "player_input_parsing_rules_v12",
+  "principle": "Parse player input as ordered sequence, not as a wish that rewrites the scene.",
+  "syntax": {
+    "outside_parentheses": "Akira's spoken line",
+    "inside_parentheses": "Akira's action, thought, pause, intention, body state, or observation",
+    "order_matters": true
+  },
+  "sequence_rule": [
+    "If input starts with parentheses, resolve that action/thought/pause first.",
+    "Then resolve any spoken line outside parentheses.",
+    "Then resolve next parentheses/action/pause if present.",
+    "NPCs may act/speak during actions and pauses.",
+    "Thoughts do not trigger external events by themselves."
+  ],
+  "thought_rule": {
+    "thought_is_not_world_command": true,
+    "description": "If Akira thinks about something, it does not mean the world must answer, reveal, arrive, or happen.",
+    "world_reacts_to": [
+      "visible actions",
+      "spoken lines",
+      "time passed",
+      "NPC goals",
+      "calendar triggers",
+      "physical consequences"
+    ],
+    "world_does_not_react_to": [
+      "unspoken thoughts as facts",
+      "player wishes hidden inside thoughts",
+      "Akira imagining an outcome"
+    ]
+  },
+  "examples": {
+    "input": "(Посмотреть на Эмму. Подумать, что она опасна.) Ты кто?",
+    "sequence": [
+      "Akira looks at Emma",
+      "Akira has an internal thought/pause",
+      "NPC may react to the look/pause",
+      "Akira says: Ты кто?"
+    ]
+  },
+  "forbidden": [
+    "do_not_treat_parentheses_thoughts_as_spoken",
+    "do_not_make_unspoken_thoughts_cause_events",
+    "do_not_skip_sequence_order",
+    "do_not_freeze_npcs_during_parentheses"
+  ]
+}
