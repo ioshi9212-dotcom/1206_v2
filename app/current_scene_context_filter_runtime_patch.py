@@ -615,14 +615,15 @@ def getSessionContext(session_id: str, user_input: str = "") -> dict[str, Any]:
 def _render_brief() -> str:
     return (
         "Use gpt/scene_format.md as the strict visible-scene contract. "
-        "Eastern Sector 1206 render rhythm: Akira anchor/action -> 1-4 NPC/world reactions -> one physical frame change -> stop at meaningful player choice. "
+        "1206 render rhythm: Akira anchor/action -> 1-4 NPC/world reactions -> one physical frame change -> stop at meaningful player choice. "
         "Visible narration only through Akira's current perception and knowledge. "
-        "NPCs act by their own goals and do not wait politely. "
+        "NPCs act by their own goals, limits and current pressure; they do not wait politely for Akira's perfect decision. "
+        "If a present NPC has a clear goal and does nothing while that goal is being broken, show the concrete reason or make them act. "
+        "Use the current calendar/day file as route pressure: move toward the next meaningful point through events, NPC choices, consequences, altered route or visible cost of delay. "
+        "Do not repeat the same crisis beat as advice-only dialogue; change bodies, distance, access, pressure, route, risk or information. "
         "Use day phases, not exact minutes. "
         "Item continuity is strict: do not create, restore, equip, pocket, move or reveal items from dialogue, memory or past references alone. "
         "Use only visible_inventory, nearby_items, current_outfit, inventory_slice and last visible frame for items, clothes, hair and containers. "
-        "Raiden appears later only when Emma/Kairos energy trace logically reaches him; visible descriptor 'парень с пирсингом' maps to character_id raiden. "
-        "Samuel's people are a pre-dawn/long-delay pressure if Akira remains outside Eastern Sector. "
         "Bottom block is a compact story interface: no RPG menu, no inventory, no clothing, no event recap, no hidden facts. "
         "Actions are up to three meaningful scene branches, not trivial observations and not speech. "
         "Possible Akira lines are up to three distinct weighted speech directions, not identical sarcasm. "
@@ -667,6 +668,10 @@ def getSessionTurnContract(session_id: str, user_input: str = "", mode: str = "p
             "Do not load or act as merely mentioned/scheduled/delayed/future characters.",
             "If visible descriptor is 'парень с пирсингом' in Raiden event, keep character_id=raiden; do not create a random NPC.",
             "Use runtime/current_scene_state_slice.json instead of full state files.",
+            "Do not repeat the same crisis beat as advice-only dialogue; change position, access, pressure, route, risk or information.",
+            "Use the current calendar/day file to move toward the next meaningful point; if the player delays, create visible cost or altered route, not a loop.",
+            "If a clear NPC goal is being blocked or violated, either make the NPC act or show the concrete reason they cannot act.",
+            "Present NPCs must act from their own goals and current pressure; do not freeze the scene around Akira waiting for a choice.",
             "Before naming or using an item, check visible_inventory, nearby_items, current_outfit, inventory_slice and last visible frame.",
             "Dialogue, memory, accusation or past reference does not put an item into Akira's pocket/hand/bag or nearby scene.",
             "Use recent_scene_history_slice.active_context_window as the active last-15-turn memory before continuing; do not invent unsaved prior events.",
@@ -687,6 +692,6 @@ def postSessionTurnContract(session_id: str, payload: dict[str, Any] = Body(defa
 
 
 try:
-    app.version = "0.3.111-1206-kairos-body-memory-guard"
+    app.version = "0.3.113-1206-generic-agency-calendar-v11"
 except Exception:
     pass
