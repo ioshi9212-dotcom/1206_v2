@@ -86,7 +86,7 @@ class StartSessionCreateRequest(BaseModel):
 class ProcessTurnRequest(BaseModel):
     player_input: str
     mode: str = "play"
-    include_file_contents: bool = True
+    include_file_contents: bool = False
     state_patches: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -397,15 +397,67 @@ def create_session(payload: StartSessionCreateRequest | None = Body(default=None
     }
 
 
+def _strip_inline_file_contents(packet: dict[str, Any]) -> dict[str, Any]:
+    """Keep scene packet metadata but remove large inline file bodies.
+
+    After the exact first scene is delivered, processTurn should not return
+    loaded file contents. The gameplay client must use required-files-chunk for
+    file contents; otherwise Action responses exceed the platform size limit.
+    """
+    if not isinstance(packet, dict):
+        return {}
+    compact = dict(packet)
+    if isinstance(compact.get("loaded_files"), list):
+        compact["loaded_files"] = [
+            {
+                "path": item.get("path"),
+                "content_chars_original": item.get("content_chars_original") or item.get("content_chars") or item.get("chars"),
+                "truncated_in_packet": item.get("truncated_in_packet") or item.get("truncated"),
+                "content_omitted": True,
+            }
+            for item in compact.get("loaded_files", [])
+            if isinstance(item, dict)
+        ]
+    if isinstance(compact.get("required_file_contents"), dict):
+        compact["required_file_contents"] = {}
+    initial = compact.get("initial_scene")
+    if isinstance(initial, dict):
+        initial = dict(initial)
+        if not initial.get("exact_text_required"):
+            initial["exact_text"] = ""
+        compact["initial_scene"] = initial
+    compact["content_mode"] = "metadata_only_after_first_scene"
+    compact["load_instruction"] = "Use required-files-manifest/chunk for file contents. processTurn scene_packet intentionally omits contents after start scene."
+    return compact
+
+
 _remove_route("/api/v1/sessions/{session_id}/scene-packet", "GET")
 
 
 @app.get("/api/v1/sessions/{session_id}/scene-packet", operation_id="getScenePacket")
-def get_scene_packet(session_id: str, max_total_chars: int = 70000, per_file_chars: int = 14000, max_files: int = 24) -> dict[str, Any]:
+def get_scene_packet(
+    session_id: str,
+    max_total_chars: int = 12000,
+    per_file_chars: int = 3000,
+    max_files: int = 4,
+    include_file_contents: bool = False,
+) -> dict[str, Any]:
     sid = _safe_session_id(session_id)
     _seed_session_files(sid, reset=False)
-    packet = _previous_get_scene_packet(sid, max_total_chars=max_total_chars, per_file_chars=per_file_chars, max_files=max_files)
-    return _attach_start_scene_context(packet, sid)
+    current = _read_state(sid, "state/current_state.json", {}) or {}
+    first_pending = _is_first_scene_not_delivered(current)
+    packet = _previous_get_scene_packet(
+        sid,
+        max_total_chars=min(int(max_total_chars or 12000), 12000),
+        per_file_chars=min(int(per_file_chars or 3000), 3000),
+        max_files=min(int(max_files or 4), 4),
+    )
+    packet = _attach_start_scene_context(packet, sid)
+    if first_pending:
+        return packet
+    # Never inline large file contents after the first exact scene, even if an old
+    # client still sends include_file_contents=true. This prevents ResponseTooLargeError.
+    return _strip_inline_file_contents(packet)
 
 
 @app.post("/api/v1/sessions/{session_id}/turn", operation_id="processTurn")
@@ -447,8 +499,17 @@ def process_turn(session_id: str, req: ProcessTurnRequest) -> dict[str, Any]:
             "character_file_refs": _start_character_file_refs(),
         }
 
-    packet = get_scene_packet(sid)
-    return {"success": True, "session_id": sid, "player_input": req.player_input, "current_scene_id": current.get("current_scene_id") or current.get("scene_id") or START_SCENE_ID, "status": "SCENE_PACKET_RETURNED", "scene_text": "", "scene_packet": packet}
+    packet = get_scene_packet(sid, include_file_contents=bool(req.include_file_contents))
+    return {
+        "success": True,
+        "session_id": sid,
+        "player_input": req.player_input,
+        "current_scene_id": current.get("current_scene_id") or current.get("scene_id") or START_SCENE_ID,
+        "status": "SCENE_PACKET_RETURNED_COMPACT",
+        "scene_text": "",
+        "scene_packet": packet,
+        "usage_note": "Compact response. If file contents are needed, call required-files-manifest/chunk; do not request full scene_packet contents on normal turns.",
+    }
 
 
 def _process_turn_schema() -> dict[str, Any]:
@@ -458,7 +519,7 @@ def _process_turn_schema() -> dict[str, Any]:
         "properties": {
             "player_input": {"type": "string"},
             "mode": {"type": "string", "default": "play"},
-            "include_file_contents": {"type": "boolean", "default": True},
+            "include_file_contents": {"type": "boolean", "default": False},
             "state_patches": {"type": "object", "additionalProperties": True},
         },
         "additionalProperties": True,
