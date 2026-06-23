@@ -67,6 +67,8 @@ RAIDEN_VISIBLE_ALIASES = {
     "парень с пирсингом": "raiden",
 }
 
+SCENE_MEMORY_WINDOW_SIZE = 15
+
 ALWAYS_SMALL_FILES = [
     SCENE_FORMAT_FILE,
     "state/player_input_parsing_rules.json",
@@ -253,15 +255,52 @@ def _slice_knowledge(data: Any, focus_ids: list[str]) -> Any:
     return result
 
 
+def _compact_scene_history_entry(item: Any) -> dict[str, Any]:
+    if not isinstance(item, dict):
+        return {"raw": str(item)[:800]}
+    text = item.get("visible_scene_text") or item.get("scene_text") or ""
+    return {
+        "id": item.get("id"),
+        "turn_number": item.get("turn_number"),
+        "current_date": item.get("current_date"),
+        "location_id": item.get("location_id"),
+        "location_text": item.get("location_text"),
+        "active_characters": item.get("active_characters", []),
+        "nearby_characters": item.get("nearby_characters", []),
+        "player_input": str(item.get("player_input") or "")[:900],
+        "visible_scene_text": str(text)[:2600],
+        "changed_files_snapshot": item.get("changed_files_snapshot", []),
+    }
+
+
 def _slice_scene_history(data: Any, focus_ids: list[str]) -> Any:
     if not isinstance(data, dict):
-        return {}
+        return {
+            "mode": "no_scene_history",
+            "active_context_window_size": SCENE_MEMORY_WINDOW_SIZE,
+            "rule": "If scene_history is absent, do not invent previously played events.",
+            "focus_character_ids": focus_ids,
+        }
     history = data.get("history") or data.get("entries") or data.get("scenes") or []
     if not isinstance(history, list):
         return {"note": "scene_history exists but has non-list structure", "focus_character_ids": focus_ids}
+    recent = history[-SCENE_MEMORY_WINDOW_SIZE:]
     focus = set(focus_ids)
-    filtered = [item for item in history if _keep_by_focus_key(item, focus)]
-    return {"recent_relevant_entries": filtered[-5:], "focus_character_ids": focus_ids}
+    filtered = [item for item in recent if _keep_by_focus_key(item, focus)]
+    return {
+        "mode": "active_last_15_scene_memory",
+        "active_context_window_size": SCENE_MEMORY_WINDOW_SIZE,
+        "available_recent_scene_count": len(recent),
+        "active_context_window": [_compact_scene_history_entry(item) for item in recent],
+        "recent_relevant_entries": [_compact_scene_history_entry(item) for item in filtered],
+        "focus_character_ids": focus_ids,
+        "rules": [
+            "Before continuing, check the last 15 saved gameplay scenes for played facts, visible item movement, injuries, clothing, position, promises, threats, and relationship shifts.",
+            "Do not resurrect events, items, promises or knowledge that were not played or saved in this window/state unless a loaded canon file explicitly says it is stable long-term memory.",
+            "If a fact from the last 15 scenes is missing in current_state/story/knowledge/relationships, preserve the played scene fact and write it through apply-turn-result.",
+            "Options in the bottom block are not facts until the player chooses them.",
+        ],
+    }
 
 
 def build_current_scene_state_slice(session_id: str, user_input: str = "") -> dict[str, Any]:
@@ -550,6 +589,7 @@ def getSessionTurnContract(session_id: str, user_input: str = "", mode: str = "p
             "Use runtime/current_scene_state_slice.json instead of full state files.",
             "Before naming or using an item, check visible_inventory, nearby_items, current_outfit, inventory_slice and last visible frame.",
             "Dialogue, memory, accusation or past reference does not put an item into Akira's pocket/hand/bag or nearby scene.",
+            "Use recent_scene_history_slice.active_context_window as the active last-15-turn memory before continuing; do not invent unsaved prior events.",
             "Final gameplay answer must be scene only: no comments, no status, no explanations.",
         ],
         "relationship_context": {"load_from": VIRTUAL_SCENE_STATE_SLICE, "scope": "present characters only"},
@@ -567,6 +607,6 @@ def postSessionTurnContract(session_id: str, payload: dict[str, Any] = Body(defa
 
 
 try:
-    app.version = "0.3.110-1206-item-continuity-guard"
+    app.version = "0.3.111-1206-kairos-body-memory-guard"
 except Exception:
     pass
