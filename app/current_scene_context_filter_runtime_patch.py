@@ -311,6 +311,13 @@ def build_current_scene_state_slice(session_id: str, user_input: str = "") -> di
             "nearby_items": state.get("nearby_items", []),
             "akira_inventory_state": inventory.get("akira", {}) if isinstance(inventory, dict) else {},
             "visibility_rule": "Inventory is player/state tracking, not automatic NPC knowledge.",
+            "item_continuity_rule": (
+                "Only visible_inventory, nearby_items, current_outfit, akira_inventory_state "
+                "and the last visible scene frame define usable or visible items. "
+                "A spoken line, thought, memory, accusation or past reference does not create, restore, equip, pocket, "
+                "move or reveal an item. Containers and luggage are visible as containers only; their contents are not visible "
+                "or usable until opened/listed by a visible action or explicit state update."
+            ),
         },
         "recent_scene_history_slice": _slice_scene_history(history, present_ids),
     }
@@ -488,14 +495,20 @@ def getScenePacket(
 
 def _render_brief() -> str:
     return (
-        "Use gpt/scene_format.md. Eastern Sector 1206 render rhythm: "
-        "Akira anchor/action -> 1-4 NPC/world reactions -> one physical frame change -> stop at actionable choice. "
+        "Use gpt/scene_format.md as the strict visible-scene contract. "
+        "Eastern Sector 1206 render rhythm: Akira anchor/action -> 1-4 NPC/world reactions -> one physical frame change -> stop at meaningful player choice. "
         "Visible narration only through Akira's current perception and knowledge. "
         "NPCs act by their own goals and do not wait politely. "
         "Use day phases, not exact minutes. "
-        "Raiden appears later only when Emma/Kairos energy trace logically reaches him; descriptor aliases still map to character_id raiden. "
+        "Item continuity is strict: do not create, restore, equip, pocket, move or reveal items from dialogue, memory or past references alone. "
+        "Use only visible_inventory, nearby_items, current_outfit, inventory_slice and last visible frame for items, clothes, hair and containers. "
+        "Raiden appears later only when Emma/Kairos energy trace logically reaches him; visible descriptor 'парень с пирсингом' maps to character_id raiden. "
         "Samuel's people are a pre-dawn/long-delay pressure if Akira remains outside Eastern Sector. "
-        "No technical comments; bottom block stays but must not leak hidden facts."
+        "Bottom block is a compact story interface: no RPG menu, no inventory, no clothing, no event recap, no hidden facts. "
+        "Actions are up to three meaningful scene branches, not trivial observations and not speech. "
+        "Possible Akira lines are up to three distinct weighted speech directions, not identical sarcasm. "
+        "Akira thoughts are up to three honest internal reactions based on this scene, with minimal sarcasm and no philosophy. "
+        "State and relationships are short numeric indicators only."
     )
 
 
@@ -530,11 +543,13 @@ def getSessionTurnContract(session_id: str, user_input: str = "", mode: str = "p
         },
         "required_checks_before_answer": [
             "Load required-files chunks before rendering.",
-            "Use gpt/scene_format.md for visual-novel rhythm and bottom blocks.",
+            "Use gpt/scene_format.md for visual-novel rhythm and strict compact bottom block rules.",
             "Use only present_character_ids for character behavior.",
             "Do not load or act as merely mentioned/scheduled/delayed/future characters.",
             "If visible descriptor is 'парень с пирсингом' in Raiden event, keep character_id=raiden; do not create a random NPC.",
             "Use runtime/current_scene_state_slice.json instead of full state files.",
+            "Before naming or using an item, check visible_inventory, nearby_items, current_outfit, inventory_slice and last visible frame.",
+            "Dialogue, memory, accusation or past reference does not put an item into Akira's pocket/hand/bag or nearby scene.",
             "Final gameplay answer must be scene only: no comments, no status, no explanations.",
         ],
         "relationship_context": {"load_from": VIRTUAL_SCENE_STATE_SLICE, "scope": "present characters only"},
@@ -552,6 +567,6 @@ def postSessionTurnContract(session_id: str, payload: dict[str, Any] = Body(defa
 
 
 try:
-    app.version = "0.3.109-1206-current-scene-day-phase-compact-packet"
+    app.version = "0.3.110-1206-item-continuity-guard"
 except Exception:
     pass
