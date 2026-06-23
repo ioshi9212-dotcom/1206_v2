@@ -360,7 +360,7 @@ for _path in [
 
 
 def _chunk_files(files: list[str], *, max_items: int) -> list[list[str]]:
-    max_items = max(1, min(int(max_items or lean.DEFAULT_CHUNK_MAX_ITEMS), 6))
+    max_items = max(1, min(int(max_items or lean.DEFAULT_CHUNK_MAX_ITEMS), 3))
     return [files[i:i + max_items] for i in range(0, len(files), max_items)] or [[]]
 
 
@@ -399,8 +399,8 @@ def getRequiredFilesChunk(
     user_input: str = "",
 ) -> dict[str, Any]:
     files = required_files_current_scene(session_id, user_input=user_input)
-    max_items = max(1, min(int(max_items or lean.DEFAULT_CHUNK_MAX_ITEMS), 6))
-    max_chars = max(1000, min(int(max_chars or lean.DEFAULT_CHUNK_MAX_CHARS), 24000))
+    max_items = max(1, min(int(max_items or lean.DEFAULT_CHUNK_MAX_ITEMS), 3))
+    max_chars = max(1000, min(int(max_chars or lean.DEFAULT_CHUNK_MAX_CHARS), 12000))
     chunks = _chunk_files(files, max_items=max_items)
     safe_index = max(0, min(int(chunk_index or 0), len(chunks) - 1))
     batch = chunks[safe_index]
@@ -442,24 +442,47 @@ def getRequiredFilesBundle(
 @app.get("/api/v1/sessions/{session_id}/scene-packet")
 def getScenePacket(
     session_id: str,
-    max_total_chars: int = 70000,
-    per_file_chars: int = 14000,
-    max_files: int = 24,
+    max_total_chars: int = 12000,
+    per_file_chars: int = 4000,
+    max_files: int = 3,
     user_input: str = "",
+    include_contents: bool = False,
 ) -> dict[str, Any]:
+    """Return a compact scene packet.
+
+    Important: default scene-packet must not inline file contents. On normal
+    gameplay turns the model should load contents through required-files-chunk.
+    Returning large loaded_files here caused ResponseTooLargeError on later turns.
+    """
     manifest = getRequiredFilesManifest(session_id=session_id, user_input=user_input)
-    first_chunk = getRequiredFilesChunk(session_id=session_id, chunk_index=0, max_chars=max_total_chars, max_items=max_files, user_input=user_input)
     state = _state(session_id)
+    loaded_files: list[dict[str, Any]] = []
+    has_more = bool(manifest.get("chunks_total", 0) and manifest.get("chunks_total", 0) > 1)
+    next_chunk_index = 0 if manifest.get("required_files") else None
+
+    if include_contents:
+        first_chunk = getRequiredFilesChunk(
+            session_id=session_id,
+            chunk_index=0,
+            max_chars=min(int(max_total_chars or 12000), 12000),
+            max_items=min(int(max_files or 3), 3),
+            user_input=user_input,
+        )
+        loaded_files = first_chunk["loaded_files"]
+        has_more = first_chunk["has_more"]
+        next_chunk_index = first_chunk["next_chunk_index"]
+
     return {
         "session_id": session_id,
         "mode": "current_scene_day_phase",
         "present_character_ids": present_character_ids_from_state(state),
         "required_files": manifest["required_files"],
-        "loaded_files": first_chunk["loaded_files"],
-        "has_more": first_chunk["has_more"],
-        "next_chunk_index": first_chunk["next_chunk_index"],
+        "loaded_files": loaded_files,
+        "has_more": has_more,
+        "next_chunk_index": next_chunk_index,
         "missing_files": manifest["missing_files"],
-        "usage_note": "Scene packet is filtered to present characters, scene_format, day-phase calendar, and current-scene state slice only.",
+        "load_instruction": "Call getRequiredFilesManifest, then getRequiredFilesChunk chunk_index=0.. until has_more=false. Do not rely on scene-packet for file contents.",
+        "usage_note": "Compact scene packet only. File contents are intentionally excluded by default to avoid ResponseTooLargeError.",
     }
 
 
@@ -529,6 +552,6 @@ def postSessionTurnContract(session_id: str, payload: dict[str, Any] = Body(defa
 
 
 try:
-    app.version = "0.3.108-1206-current-scene-day-phase-filter"
+    app.version = "0.3.109-1206-current-scene-day-phase-compact-packet"
 except Exception:
     pass
