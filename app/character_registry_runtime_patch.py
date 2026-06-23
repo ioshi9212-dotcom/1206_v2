@@ -32,6 +32,7 @@ CHARACTER_FOLDER_ALIASES: dict[str, str] = {
     "raiden": "raiden",
     "raiden_sterling": "raiden",
     "char_raiden": "raiden",
+    "парень с пирсингом": "raiden",
 
     "irey": "irey",
     "char_irey": "irey",
@@ -93,7 +94,7 @@ start_runtime.START_SCENE_GOALS.update(
         "jun": "Выиграть время, не отдать Акиру Ирэю и Эмме, направить её к Рэю / Восточному сектору.",
         "irey": "Найти Акиру первым, увидеть её живой, не отдать Самуэлю, скрыть истинный мотив от Эммы.",
         "emma": "Давить, быстро забрать/вернуть Акиру в линию Самуэля, не быть мягкой союзницей.",
-        "raiden": "Появиться около 03:02 из-за дня рождения/морского маршрута и следа Эммы; не помнить Акиру.",
+        "raiden": "Появиться позже по следу энергии Эммы: 31 августа он был у моря на своём ежегодном маршруте; не помнить Акиру; не появляться в первые пару минут.",
         "ray": "При прибытии Акиры в Восточный сектор перехватить контроль, скрыть правду и ограничить доступ к ней.",
     }
 )
@@ -116,8 +117,10 @@ def _ensure_start_state_patched(session_id: str) -> dict[str, Any]:
             + list(start_runtime.START_CHARACTER_IDS)
             + list(start_runtime.CONDITIONAL_CHARACTER_IDS)
         )
-        current["current_time"] = "02:40"
-        current["time"] = "02:40"
+        current["current_day_phase"] = "поздняя ночь"
+        current["time_of_day"] = "поздняя ночь"
+        current.pop("current_time", None)
+        current.pop("time", None)
         current["current_location_id"] = "jun_house_akira_room"
         current["location_id"] = "jun_house_akira_room"
         current["current_location_text"] = "дом Джуна Картера, комната Акиры"
@@ -125,7 +128,7 @@ def _ensure_start_state_patched(session_id: str) -> dict[str, Any]:
         current["visible_inventory"] = []
         current["nearby_items"] = ["дверь", "окно", "стол", "записка Рэй / Восточный сектор", "документы Акира Агатсуми / 12 апреля"]
         current["current_scene_goal"] = (
-            "Стартовая сцена: Акира просыпается в 02:40, слышит голоса Эммы и Ирэя внизу, "
+            "Стартовая сцена: поздняя ночь. Акира просыпается от голосов Эммы и Ирэя внизу, "
             "Джун тянет время, в комнате есть записка Рэй / Восточный сектор и документы Акира Агатсуми."
         )
         current["start_scene_file"] = start_runtime.START_SCENE_PATH
@@ -154,6 +157,6 @@ def _ensure_start_state_patched(session_id: str) -> dict[str, Any]:
 start_runtime._ensure_start_state = _ensure_start_state_patched
 
 try:
-    start_runtime.app.version = "0.3.90-1206-clean-character-registry-miki"
+    start_runtime.app.version = "0.3.108-1206-clean-character-registry-day-phase"
 except Exception:
     pass

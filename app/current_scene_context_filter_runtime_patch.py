@@ -1,19 +1,14 @@
-"""Current-scene-only context filter for 1206 v2.
+"""Current-scene-only context filter for Akira 1206 v2.
 
-Fixes two runtime problems:
-1) Required files must load Akira + only characters physically/actively present in
-   the current scene. Mentioned/scheduled/delayed/future characters are not loaded.
-2) Live state must be a focused scene slice, not full relationship/knowledge/history
-   JSON for the whole story.
-
-This patch is intentionally loaded late from production_runtime_patch, after
-character_registry, lean_context, state_memory and time_flow patches.
+Purpose:
+- Load Akira + only characters physically/actively present in the current scene.
+- Keep the scene format/rhythm file in every turn, Academy-style, but with Eastern Sector content.
+- Use day phases instead of exact minute-based time.
+- Keep focused current-scene state slice instead of full relationship/knowledge/history dumps.
 """
 from __future__ import annotations
 
 import json
-import math
-import re
 from typing import Any
 
 from fastapi import Body
@@ -29,6 +24,8 @@ except Exception:  # pragma: no cover
     compact_context = None  # type: ignore[assignment]
 
 VIRTUAL_SCENE_STATE_SLICE = "runtime/current_scene_state_slice.json"
+
+SCENE_FORMAT_FILE = "gpt/scene_format.md"
 GAMEPLAY_RESPONSE_GATE_FILE = "gpt/locks/gameplay_response_gate.md"
 PLAYER_INPUT_ANCHOR_LOCK_FILE = "gpt/locks/player_input_anchor_lock.md"
 VISIBLE_SCENE_LOCK_FILE = "gpt/locks/gameplay_visible_scene_before_state_and_no_status_summary.md"
@@ -66,7 +63,12 @@ EXCLUDED_ROSTER_FIELDS = [
     "allowed_main_characters",
 ]
 
+RAIDEN_VISIBLE_ALIASES = {
+    "парень с пирсингом": "raiden",
+}
+
 ALWAYS_SMALL_FILES = [
+    SCENE_FORMAT_FILE,
     "state/player_input_parsing_rules.json",
     "state/narrative_director_rules.json",
     "state/context_loading_rules_1206.json",
@@ -80,16 +82,18 @@ ALWAYS_SMALL_FILES = [
 
 
 def _clean(value: Any) -> str:
-    text = str(value or "").strip()
-    return text
+    return str(value or "").strip()
 
 
 def _cid(value: Any) -> str:
     raw = _clean(value)
     if not raw:
         return ""
+    lowered = raw.lower().replace("ё", "е")
+    if lowered in RAIDEN_VISIBLE_ALIASES:
+        return RAIDEN_VISIBLE_ALIASES[lowered]
     try:
-        return lean.CHARACTER_ALIASES.get(raw, raw)
+        return lean.CHARACTER_ALIASES.get(raw, lean.CHARACTER_ALIASES.get(lowered, raw))
     except Exception:
         return raw
 
@@ -165,29 +169,25 @@ def _text_has(text: str, needles: list[str]) -> bool:
 def _past_needed_for(cid: str, trigger_text: str) -> bool:
     cid = _cid(cid)
     if cid == "akira":
-        return _text_has(trigger_text, [
-            "память", "шрам", "кольцо", "пирсинг", "кот", "животн", "пространств", "ребен", "ребён", "беремен", "самуэл", "самуэль",
-        ])
+        return _text_has(trigger_text, ["память", "шрам", "кольцо", "пространств", "ребен", "ребён", "беремен", "самуэл", "самуэль"])
     if cid == "raiden":
-        return _text_has(trigger_text, ["райден", "рейден", "кольц", "ar", "сигарет", "холод", "хвоя", "пирсинг"])
+        return _text_has(trigger_text, ["кольц", "ar", "сигарет", "холод", "хвоя", "пирсинг"])
     if cid == "irey":
-        return _text_has(trigger_text, ["ирэй", "ирей", "якор", "касани", "след", "самуэл", "самуэль", "похорон"])
+        return _text_has(trigger_text, ["якор", "касани", "след", "самуэл", "самуэль", "похорон"])
     if cid == "yuna":
-        return _text_has(trigger_text, ["юна", "медик", "медблок", "рана", "ранение", "кров", "осмотр", "ребен", "ребён", "самуэл", "самуэль"])
+        return _text_has(trigger_text, ["медик", "медблок", "рана", "ранение", "кров", "осмотр", "ребен", "ребён", "самуэл", "самуэль"])
     if cid in {"jun", "ray", "miki", "emma", "haru"}:
         return _text_has(trigger_text, [cid, "прошл", "память", "самуэл", "самуэль"])
     return False
 
 
 def _trigger_text(state: dict[str, Any], user_input: str = "") -> str:
-    return " ".join(
-        [
-            str(user_input or ""),
-            str(state.get("current_scene_goal") or ""),
-            str(state.get("last_player_action") or ""),
-            str(state.get("current_location_text") or state.get("location") or ""),
-        ]
-    )
+    return " ".join([
+        str(user_input or ""),
+        str(state.get("current_scene_goal") or ""),
+        str(state.get("last_player_action") or ""),
+        str(state.get("current_location_text") or state.get("location") or ""),
+    ])
 
 
 def required_files_current_scene(session_id: str, user_input: str = "") -> list[str]:
@@ -204,7 +204,6 @@ def required_files_current_scene(session_id: str, user_input: str = "") -> list[
         if _exists(path, session_id):
             files.append(path)
 
-    # Focused scene state replaces full relationships/knowledge/history files.
     files.append(VIRTUAL_SCENE_STATE_SLICE)
 
     for cid in present_ids:
@@ -283,7 +282,7 @@ def build_current_scene_state_slice(session_id: str, user_input: str = "") -> di
         character_state["akira_state"] = state.get("akira_state")
 
     return {
-        "schema": "current_scene_state_slice_v1",
+        "schema": "current_scene_state_slice_v2_day_phase",
         "context_filter": {
             "mode": "current_scene_only",
             "present_character_ids": present_ids,
@@ -292,7 +291,7 @@ def build_current_scene_state_slice(session_id: str, user_input: str = "") -> di
         },
         "current_scene": {
             "date": state.get("current_date") or state.get("date"),
-            "time": state.get("current_time") or state.get("time"),
+            "day_phase": state.get("current_day_phase") or state.get("day_phase") or state.get("time_of_day"),
             "scene_id": _scene_id(state),
             "location_id": state.get("current_location_id") or state.get("location_id"),
             "location_text": state.get("current_location_text") or state.get("location"),
@@ -311,10 +310,10 @@ def build_current_scene_state_slice(session_id: str, user_input: str = "") -> di
             "visible_inventory": state.get("visible_inventory", []),
             "nearby_items": state.get("nearby_items", []),
             "akira_inventory_state": inventory.get("akira", {}) if isinstance(inventory, dict) else {},
+            "visibility_rule": "Inventory is player/state tracking, not automatic NPC knowledge.",
         },
         "recent_scene_history_slice": _slice_scene_history(history, present_ids),
     }
-
 
 _ORIGINAL_LEAN_READ_TEXT = lean._read_text
 
@@ -331,7 +330,6 @@ lean._read_text = _read_text_current_scene  # type: ignore[assignment]
 lean._required_files = required_files_current_scene  # type: ignore[assignment]
 lean._active_ids = lambda state: present_character_ids_from_state(state)  # type: ignore[assignment]
 
-# State-memory patch used to append full state files; replace that with the virtual slice.
 state_memory.LIVE_STATE_FILES = [VIRTUAL_SCENE_STATE_SLICE]
 state_memory._live_state_files = lambda session_id: [VIRTUAL_SCENE_STATE_SLICE]  # type: ignore[assignment]
 state_memory.focus_ids_from_state = lambda state, user_input="": present_character_ids_from_state(state)  # type: ignore[assignment]
@@ -356,6 +354,7 @@ for _path in [
     "/api/v1/sessions/{session_id}/required-files-chunk",
     "/api/v1/sessions/{session_id}/required-files-bundle",
     "/api/v1/sessions/{session_id}/turn-contract",
+    "/api/v1/sessions/{session_id}/scene-packet",
 ]:
     _remove_route(_path)
 
@@ -378,7 +377,7 @@ def getRequiredFilesManifest(session_id: str, user_input: str = "") -> dict[str,
                 "exists": True,
                 "source": "current_scene_virtual" if p == VIRTUAL_SCENE_STATE_SLICE else "project_or_session",
                 "chars": len(lean._read_text(p, session_id=session_id)),
-                "loaded_by": "current_scene_only_filter_v1",
+                "loaded_by": "current_scene_day_phase_filter_v2",
                 "content_in_contract": False,
             }
             for p in files
@@ -387,7 +386,7 @@ def getRequiredFilesManifest(session_id: str, user_input: str = "") -> dict[str,
         "chunks_total": chunks_total,
         "loaded_count": len(files),
         "missing_count": 0,
-        "usage_note": "Load chunks. Context is filtered to present characters and current-scene state slice only.",
+        "usage_note": "Load chunks. Context is filtered to present characters, scene_format, day-phase calendar, and current-scene state slice only.",
     }
 
 
@@ -437,12 +436,43 @@ def getRequiredFilesBundle(
     max_items: int = lean.DEFAULT_CHUNK_MAX_ITEMS,
     user_input: str = "",
 ) -> dict[str, Any]:
-    return getRequiredFilesChunk(
-        session_id=session_id,
-        chunk_index=chunk_index,
-        max_chars=max_chars,
-        max_items=max_items,
-        user_input=user_input,
+    return getRequiredFilesChunk(session_id=session_id, chunk_index=chunk_index, max_chars=max_chars, max_items=max_items, user_input=user_input)
+
+
+@app.get("/api/v1/sessions/{session_id}/scene-packet")
+def getScenePacket(
+    session_id: str,
+    max_total_chars: int = 70000,
+    per_file_chars: int = 14000,
+    max_files: int = 24,
+    user_input: str = "",
+) -> dict[str, Any]:
+    manifest = getRequiredFilesManifest(session_id=session_id, user_input=user_input)
+    first_chunk = getRequiredFilesChunk(session_id=session_id, chunk_index=0, max_chars=max_total_chars, max_items=max_files, user_input=user_input)
+    state = _state(session_id)
+    return {
+        "session_id": session_id,
+        "mode": "current_scene_day_phase",
+        "present_character_ids": present_character_ids_from_state(state),
+        "required_files": manifest["required_files"],
+        "loaded_files": first_chunk["loaded_files"],
+        "has_more": first_chunk["has_more"],
+        "next_chunk_index": first_chunk["next_chunk_index"],
+        "missing_files": manifest["missing_files"],
+        "usage_note": "Scene packet is filtered to present characters, scene_format, day-phase calendar, and current-scene state slice only.",
+    }
+
+
+def _render_brief() -> str:
+    return (
+        "Use gpt/scene_format.md. Eastern Sector 1206 render rhythm: "
+        "Akira anchor/action -> 1-4 NPC/world reactions -> one physical frame change -> stop at actionable choice. "
+        "Visible narration only through Akira's current perception and knowledge. "
+        "NPCs act by their own goals and do not wait politely. "
+        "Use day phases, not exact minutes. "
+        "Raiden appears later only when Emma/Kairos energy trace logically reaches him; descriptor aliases still map to character_id raiden. "
+        "Samuel's people are a pre-dawn/long-delay pressure if Akira remains outside Eastern Sector. "
+        "No technical comments; bottom block stays but must not leak hidden facts."
     )
 
 
@@ -457,11 +487,11 @@ def getSessionTurnContract(session_id: str, user_input: str = "", mode: str = "p
         "mode": mode,
         "current_scene_anchor": {
             "date": state.get("current_date") or state.get("date"),
-            "time": state.get("current_time") or state.get("time"),
+            "day_phase": state.get("current_day_phase") or state.get("day_phase") or state.get("time_of_day"),
             "scene_id": _scene_id(state),
             "location": state.get("current_location_id") or state.get("location_id") or state.get("location"),
             "present_character_ids": present_ids,
-            "context_filter": "current_scene_only",
+            "context_filter": "current_scene_day_phase",
         },
         "active_character_ids": present_ids,
         "nearby_character_ids": [cid for cid in _values(state.get("nearby_character_ids") or state.get("nearby_characters"))],
@@ -469,46 +499,36 @@ def getSessionTurnContract(session_id: str, user_input: str = "", mode: str = "p
         "required_file_contents": {},
         "output_format_contract": {
             "scene_only_for_play": True,
+            "use_scene_format_md": True,
+            "use_day_phase_not_exact_time": True,
             "no_technical_comment_before_scene": True,
             "no_author_comments": True,
             "player_controls_only_akira": True,
-            "final_answer_must_not_include": [
-                "API status",
-                "contract summary",
-                "saving log",
-                "debug commentary",
-                "author note",
-                "Комментарий",
-                "Технически",
-                "Я загрузил/проверил/сохранил",
-            ],
         },
         "required_checks_before_answer": [
             "Load required-files chunks before rendering.",
-            "Use only present_character_ids from current_scene_anchor for character behavior.",
+            "Use gpt/scene_format.md for visual-novel rhythm and bottom blocks.",
+            "Use only present_character_ids for character behavior.",
             "Do not load or act as merely mentioned/scheduled/delayed/future characters.",
+            "If visible descriptor is 'парень с пирсингом' in Raiden event, keep character_id=raiden; do not create a random NPC.",
             "Use runtime/current_scene_state_slice.json instead of full state files.",
             "Final gameplay answer must be scene only: no comments, no status, no explanations.",
         ],
         "relationship_context": {"load_from": VIRTUAL_SCENE_STATE_SLICE, "scope": "present characters only"},
         "knowledge_table": {"load_from": VIRTUAL_SCENE_STATE_SLICE, "scope": "present characters only"},
         "inventory_contract": {"load_from": VIRTUAL_SCENE_STATE_SLICE},
-        "story_context": {"context_loading": "current_scene_only_filter_v1"},
-        "prompt_preview": "Render only the gameplay scene. Use Akira + present characters only. Use current_scene_state_slice for state. Do not write technical/commentary text.",
-        "usage_note": "Context is filtered: present characters only, focused current-scene state slice only.",
+        "story_context": {"context_loading": "current_scene_day_phase_filter_v2"},
+        "prompt_preview": _render_brief(),
+        "usage_note": "Context is filtered: present characters only, scene_format loaded, focused current-scene state slice, day phases instead of exact times.",
     }
 
 
 @app.post("/api/v1/sessions/{session_id}/turn-contract")
 def postSessionTurnContract(session_id: str, payload: dict[str, Any] = Body(default_factory=dict)) -> dict[str, Any]:
-    return getSessionTurnContract(
-        session_id,
-        user_input=str(payload.get("user_input") or payload.get("player_input") or ""),
-        mode=str(payload.get("mode") or "play"),
-    )
+    return getSessionTurnContract(session_id, user_input=str(payload.get("user_input") or payload.get("player_input") or ""), mode=str(payload.get("mode") or "play"))
 
 
 try:
-    app.version = "0.3.107-1206-current-scene-context-filter"
+    app.version = "0.3.108-1206-current-scene-day-phase-filter"
 except Exception:
     pass
