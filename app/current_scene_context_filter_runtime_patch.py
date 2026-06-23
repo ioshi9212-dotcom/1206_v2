@@ -76,6 +76,10 @@ ALWAYS_SMALL_FILES = [
     "state/context_loading_rules_1206.json",
     "state/time_flow_rules_1206.json",
     "state/relationship_memory_rules_1206.json",
+    "canon_lore/core/world_background.yaml",
+    "canon_lore/world/energy_system.yaml",
+    "canon_lore/east_sector/east_sector_base.yaml",
+    "locations/east_sector_locations.yaml",
     "calendar/east_sector_1206_calendar.yaml",
     GAMEPLAY_RESPONSE_GATE_FILE,
     PLAYER_INPUT_ANCHOR_LOCK_FILE,
@@ -274,14 +278,17 @@ def _compact_scene_history_entry(item: Any) -> dict[str, Any]:
 
 
 def _slice_scene_history(data: Any, focus_ids: list[str]) -> Any:
-    if not isinstance(data, dict):
+    if isinstance(data, dict):
+        history = data.get("history") or data.get("entries") or data.get("scenes") or []
+    elif isinstance(data, list):
+        history = data
+    else:
         return {
             "mode": "no_scene_history",
             "active_context_window_size": SCENE_MEMORY_WINDOW_SIZE,
             "rule": "If scene_history is absent, do not invent previously played events.",
             "focus_character_ids": focus_ids,
         }
-    history = data.get("history") or data.get("entries") or data.get("scenes") or []
     if not isinstance(history, list):
         return {"note": "scene_history exists but has non-list structure", "focus_character_ids": focus_ids}
     recent = history[-SCENE_MEMORY_WINDOW_SIZE:]
@@ -291,17 +298,13 @@ def _slice_scene_history(data: Any, focus_ids: list[str]) -> Any:
         "mode": "active_last_15_scene_memory",
         "active_context_window_size": SCENE_MEMORY_WINDOW_SIZE,
         "available_recent_scene_count": len(recent),
-        "active_context_window": [_compact_scene_history_entry(item) for item in recent],
-        "recent_relevant_entries": [_compact_scene_history_entry(item) for item in filtered],
-        "focus_character_ids": focus_ids,
-        "rules": [
-            "Before continuing, check the last 15 saved gameplay scenes for played facts, visible item movement, injuries, clothing, position, promises, threats, and relationship shifts.",
-            "Do not resurrect events, items, promises or knowledge that were not played or saved in this window/state unless a loaded canon file explicitly says it is stable long-term memory.",
-            "If a fact from the last 15 scenes is missing in current_state/story/knowledge/relationships, preserve the played scene fact and write it through apply-turn-result.",
-            "Options in the bottom block are not facts until the player chooses them.",
-        ],
+        "focused_recent_scene_count": len(filtered),
+        "rule": (
+            "Use these last played scenes as the active continuity window. Played facts from recent scenes override stale prompts, old options and old state wording. "
+            "Bottom-block suggestions are not facts until the player chooses them. If an item/outfit/location/injury was changed in these scenes, do not revert it from older files."
+        ),
+        "recent_scenes": [_compact_scene_history_entry(item) for item in filtered],
     }
-
 
 def build_current_scene_state_slice(session_id: str, user_input: str = "") -> dict[str, Any]:
     state = _state(session_id)
@@ -396,6 +399,7 @@ def _remove_route(path: str, method: str | None = None) -> None:
 
 
 for _path in [
+    "/api/v1/sessions/{session_id}/context",
     "/api/v1/sessions/{session_id}/required-files-manifest",
     "/api/v1/sessions/{session_id}/required-files-chunk",
     "/api/v1/sessions/{session_id}/required-files-bundle",
@@ -405,34 +409,88 @@ for _path in [
     _remove_route(_path)
 
 
-def _chunk_files(files: list[str], *, max_items: int) -> list[list[str]]:
-    max_items = max(1, min(int(max_items or lean.DEFAULT_CHUNK_MAX_ITEMS), 3))
-    return [files[i:i + max_items] for i in range(0, len(files), max_items)] or [[]]
+DEFAULT_FILE_PART_CHARS = 6000
+DEFAULT_CHUNK_MAX_CHARS = 12000
+DEFAULT_CHUNK_MAX_ITEMS = 3
+
+
+def _safe_int(value: Any, default: int) -> int:
+    try:
+        return int(value)
+    except Exception:
+        return default
+
+
+def _split_text_parts(path: str, raw: str, *, part_chars: int) -> list[dict[str, Any]]:
+    part_chars = max(1000, min(_safe_int(part_chars, DEFAULT_FILE_PART_CHARS), 12000))
+    if raw == "":
+        return [{"path": path, "content": "", "part_index": 0, "parts_total": 1, "chars": 0, "truncated": False}]
+    pieces = [raw[i:i + part_chars] for i in range(0, len(raw), part_chars)]
+    total = len(pieces)
+    return [
+        {"path": path, "content": piece, "part_index": index, "parts_total": total, "chars": len(piece), "truncated": False}
+        for index, piece in enumerate(pieces)
+    ]
+
+
+def _all_file_parts(session_id: str, files: list[str], *, part_chars: int = DEFAULT_FILE_PART_CHARS) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    loaded_parts: list[dict[str, Any]] = []
+    manifest_files: list[dict[str, Any]] = []
+    for path in files:
+        raw = lean._read_text(path, session_id=session_id)
+        parts = _split_text_parts(path, raw, part_chars=part_chars)
+        loaded_parts.extend(parts)
+        manifest_files.append({
+            "path": path,
+            "exists": True,
+            "source": "current_scene_virtual" if path == VIRTUAL_SCENE_STATE_SLICE else "project_or_session",
+            "chars": len(raw),
+            "parts_total": len(parts),
+            "loaded_by": "current_scene_day_phase_filter_v3_parts",
+            "content_in_contract": False,
+        })
+    return loaded_parts, manifest_files
+
+
+def _chunk_parts(parts: list[dict[str, Any]], *, max_chars: int, max_items: int) -> list[list[dict[str, Any]]]:
+    max_items = max(1, min(_safe_int(max_items, DEFAULT_CHUNK_MAX_ITEMS), 6))
+    max_chars = max(1000, min(_safe_int(max_chars, DEFAULT_CHUNK_MAX_CHARS), 24000))
+    chunks: list[list[dict[str, Any]]] = []
+    current: list[dict[str, Any]] = []
+    used = 0
+    for part in parts:
+        chars = len(str(part.get("content") or ""))
+        if current and (len(current) >= max_items or used + chars > max_chars):
+            chunks.append(current)
+            current = []
+            used = 0
+        current.append(part)
+        used += chars
+    if current:
+        chunks.append(current)
+    return chunks or [[]]
 
 
 @app.get("/api/v1/sessions/{session_id}/required-files-manifest")
 def getRequiredFilesManifest(session_id: str, user_input: str = "") -> dict[str, Any]:
     files = required_files_current_scene(session_id, user_input=user_input)
-    chunks_total = len(_chunk_files(files, max_items=lean.DEFAULT_CHUNK_MAX_ITEMS))
+    loaded_parts, manifest_files = _all_file_parts(session_id, files, part_chars=DEFAULT_FILE_PART_CHARS)
+    chunks_total = len(_chunk_parts(loaded_parts, max_chars=DEFAULT_CHUNK_MAX_CHARS, max_items=DEFAULT_CHUNK_MAX_ITEMS))
     return {
         "session_id": session_id,
         "required_files": files,
-        "files": [
-            {
-                "path": p,
-                "exists": True,
-                "source": "current_scene_virtual" if p == VIRTUAL_SCENE_STATE_SLICE else "project_or_session",
-                "chars": len(lean._read_text(p, session_id=session_id)),
-                "loaded_by": "current_scene_day_phase_filter_v2",
-                "content_in_contract": False,
-            }
-            for p in files
-        ],
+        "files": manifest_files,
         "missing_files": [],
         "chunks_total": chunks_total,
         "loaded_count": len(files),
         "missing_count": 0,
-        "usage_note": "Load chunks. Context is filtered to present characters, scene_format, day-phase calendar, and current-scene state slice only.",
+        "total_loaded_parts": len(loaded_parts),
+        "default_file_part_chars": DEFAULT_FILE_PART_CHARS,
+        "default_chunk_max_chars": DEFAULT_CHUNK_MAX_CHARS,
+        "usage_note": (
+            "Load all chunks. Long files are split into numbered parts; no required file content is silently truncated. "
+            "Continue getRequiredFilesChunk until has_more=false."
+        ),
     }
 
 
@@ -440,24 +498,19 @@ def getRequiredFilesManifest(session_id: str, user_input: str = "") -> dict[str,
 def getRequiredFilesChunk(
     session_id: str,
     chunk_index: int = 0,
-    max_chars: int = lean.DEFAULT_CHUNK_MAX_CHARS,
-    max_items: int = lean.DEFAULT_CHUNK_MAX_ITEMS,
+    max_chars: int = DEFAULT_CHUNK_MAX_CHARS,
+    max_items: int = DEFAULT_CHUNK_MAX_ITEMS,
     user_input: str = "",
 ) -> dict[str, Any]:
     files = required_files_current_scene(session_id, user_input=user_input)
-    max_items = max(1, min(int(max_items or lean.DEFAULT_CHUNK_MAX_ITEMS), 3))
-    max_chars = max(1000, min(int(max_chars or lean.DEFAULT_CHUNK_MAX_CHARS), 12000))
-    chunks = _chunk_files(files, max_items=max_items)
-    safe_index = max(0, min(int(chunk_index or 0), len(chunks) - 1))
+    safe_max_chars = max(1000, min(_safe_int(max_chars, DEFAULT_CHUNK_MAX_CHARS), 24000))
+    safe_max_items = max(1, min(_safe_int(max_items, DEFAULT_CHUNK_MAX_ITEMS), 6))
+    part_chars = min(DEFAULT_FILE_PART_CHARS, safe_max_chars)
+    loaded_parts, _manifest_files = _all_file_parts(session_id, files, part_chars=part_chars)
+    chunks = _chunk_parts(loaded_parts, max_chars=safe_max_chars, max_items=safe_max_items)
+    safe_index = max(0, min(_safe_int(chunk_index, 0), len(chunks) - 1))
     batch = chunks[safe_index]
-    per_file_limit = max(1000, max_chars // max(1, len(batch) or 1))
-    loaded = []
-    used = 0
-    for path in batch:
-        raw = lean._read_text(path, session_id=session_id)
-        cut = raw if len(raw) <= per_file_limit else raw[:per_file_limit]
-        used += len(cut)
-        loaded.append({"path": path, "content": cut, "truncated": len(cut) < len(raw), "chars": len(cut)})
+    used = sum(len(str(part.get("content") or "")) for part in batch)
     has_more = safe_index < len(chunks) - 1
     return {
         "session_id": session_id,
@@ -466,11 +519,12 @@ def getRequiredFilesChunk(
         "chunks_total": len(chunks),
         "has_more": has_more,
         "next_chunk_index": safe_index + 1 if has_more else None,
-        "loaded_files": loaded,
+        "loaded_files": batch,
         "missing_files": [],
-        "loaded_count": len(loaded),
+        "loaded_count": len(batch),
         "missing_count": 0,
         "total_loaded_parts": used,
+        "usage_note": "Every loaded_files item is a full numbered part of a file. If parts_total > 1, later chunks contain the remaining parts.",
     }
 
 
@@ -478,8 +532,8 @@ def getRequiredFilesChunk(
 def getRequiredFilesBundle(
     session_id: str,
     chunk_index: int = 0,
-    max_chars: int = lean.DEFAULT_CHUNK_MAX_CHARS,
-    max_items: int = lean.DEFAULT_CHUNK_MAX_ITEMS,
+    max_chars: int = DEFAULT_CHUNK_MAX_CHARS,
+    max_items: int = DEFAULT_CHUNK_MAX_ITEMS,
     user_input: str = "",
 ) -> dict[str, Any]:
     return getRequiredFilesChunk(session_id=session_id, chunk_index=chunk_index, max_chars=max_chars, max_items=max_items, user_input=user_input)
@@ -529,6 +583,32 @@ def getScenePacket(
         "missing_files": manifest["missing_files"],
         "load_instruction": "Call getRequiredFilesManifest, then getRequiredFilesChunk chunk_index=0.. until has_more=false. Do not rely on scene-packet for file contents.",
         "usage_note": "Compact scene packet only. File contents are intentionally excluded by default to avoid ResponseTooLargeError.",
+    }
+
+
+@app.get("/api/v1/sessions/{session_id}/context")
+def getSessionContext(session_id: str, user_input: str = "") -> dict[str, Any]:
+    state = _state(session_id)
+    present_ids = present_character_ids_from_state(state)
+    files = required_files_current_scene(session_id, user_input=user_input)
+    return {
+        "session_id": session_id,
+        "mode": "current_scene_day_phase_context_v3_parts",
+        "current_state": {
+            "date": state.get("current_date") or state.get("date"),
+            "day_phase": state.get("current_day_phase") or state.get("day_phase") or state.get("time_of_day"),
+            "scene_id": _scene_id(state),
+            "location_id": state.get("current_location_id") or state.get("location_id"),
+            "location_text": state.get("current_location_text") or state.get("location"),
+            "current_outfit": state.get("current_outfit"),
+            "visible_inventory": state.get("visible_inventory", []),
+            "nearby_items": state.get("nearby_items", []),
+            "last_player_input": state.get("last_player_input"),
+        },
+        "active_character_ids": present_ids,
+        "nearby_character_ids": [cid for cid in _values(state.get("nearby_character_ids") or state.get("nearby_characters"))],
+        "required_files": files,
+        "usage_note": "Compact context only. Load manifest/chunks; long files are split into full parts, not truncated.",
     }
 
 
