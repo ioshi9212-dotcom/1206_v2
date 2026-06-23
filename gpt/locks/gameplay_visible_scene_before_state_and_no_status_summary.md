@@ -1,40 +1,78 @@
-# Visible scene before state lock — 1206 v2
+# Visible scene lock — 1206
 
-The visible scene is the user-facing result. State updates are internal.
+Этот lock фиксирует порядок gameplay-ответа и границы видимой сцены. Он не является текстом для вставки в сцену.
 
-After calling `apply-turn-result`, return the scene text, not a changelog.
+## Сбор данных перед сценой
 
-## Name visibility — Ray
+Перед рендером использовать загруженные источники:
 
-In user-facing narration and ordinary dialogue, use `Рэй` only.
+- current_state;
+- current_scene_state_slice;
+- active/nearby персонажи;
+- character files присутствующих персонажей;
+- relationship slice;
+- knowledge slice;
+- inventory / visible items;
+- scene goal;
+- календарный beat;
+- stop conditions.
 
-Allowed:
+Этот пакет внутренний. Его нельзя показывать пользователю.
 
-- `Рэй`;
-- `командующий Рэй`, if the role has been established in-scene.
+## Видимый текст до state
 
-Forbidden in normal visible scene:
+В gameplay mode сначала собирается полный visible_scene_text:
 
-- `Рэй Картер` as a casual/ordinary name;
-- surname-based address for Ray.
+- шапка;
+- тело сцены;
+- точная реплика Акиры из текущего ввода, если она есть;
+- действие Акиры из скобок;
+- реакции NPC/мира;
+- последствие, конфликт, движение, крючок или новый выбор;
+- нижний блок.
 
-Exception: documents, archive entries, official lists, or an explicit scene where the surname is physically read from a file.
+State-save не заменяет сцену.
 
-## Played continuity window
+## После apply-turn-result
 
-Use the last visible played scene facts and the current-scene state slice before old prompts/options.
+После технического сохранения финальный ответ всё равно должен быть gameplay-сценой, а не отчётом.
 
-- A bottom-block suggestion is not a fact until the player chooses it.
-- A spoken mention of an object, document, outfit, injury, location, or memory does not create or move it.
-- If recent scene history says an item was burned, lost, taken, removed, put away, worn, or left elsewhere, do not restore it from old text.
+Не показывать технические статусы, файлы, source, dry_run, render_packet, список обновлений или объяснение сохранения.
 
-## NPC agency and calendar pressure
+## POV-lock
 
-Do not freeze the scene around Akira's next decision.
+Видимая сцена фильтруется через текущие знания и восприятие POV.
 
-- Present NPCs act from their own goals, limits, fears, duties, loyalties and current pressure.
-- An NPC may disagree with Akira, block her, move her, protect her, mislead her, use her pause, call for help, or change the route if their goal demands it.
-- If an NPC has a clear goal and does nothing while that goal is being broken, show the concrete reason; otherwise make them act.
-- Do not repeat a crisis beat as advice-only dialogue. Escalate, interrupt, move bodies/positions, change access to exits/items/people, or trigger the next calendar pressure.
-- The current calendar/day file and scene goal must pull toward the next meaningful point. If the player delays, the world creates a cost or an alternate route instead of waiting forever.
+Допустимо писать только видимое, слышимое, телесно ощущаемое, внешне заметное и логично предполагаемое из раскрытого.
 
+Запрещено: авторское знание, hidden lore, мысли NPC, объяснение правил, объяснение источников знания, hidden lore через отсутствие реакции, самопохвала.
+
+## Скрытый инвентарь и физические объекты
+
+State/inventory не равен знанию NPC.
+
+Точное называние скрытого объекта требует подтверждённого источника. Без подтверждения сцена пишет только видимую реакцию или действие, не объясняя ограничение.
+
+## Вопросы и движение сцены
+
+Вопрос Акиры не замораживает сцену.
+
+Персонажи действуют по своим приоритетам. Они могут не ответить, ответить частично, отложить разговор или выбрать действие важнее разговора.
+
+Опасность, срочность, травма, маршрут, приказ, внешний риск и календарный beat имеют приоритет над спокойным объяснением.
+
+Серия вопросов не должна заменять движение сцены. Если разговор зациклился, сцена обязана изменить позицию, риск, маршрут, доступный выбор или внешний фактор.
+
+## No Akira dialogue without player speech
+
+Если текущий ввод игрока не содержит текста вне скобок, в теле сцены запрещено создавать новую реплику Акиры.
+
+Акира может действовать, молчать, смотреть, двигаться, физически реагировать или держать паузу.
+
+Возможные фразы Акиры идут только в нижний блок.
+
+## No rules inside scene
+
+Правила, названия файлов, причины runtime, проверки state и формулировки из locks не должны попадать в видимый текст сцены.
+
+Если текст сцены начинает объяснять, что он соблюдает правило, его нужно переписать как обычное видимое действие.
