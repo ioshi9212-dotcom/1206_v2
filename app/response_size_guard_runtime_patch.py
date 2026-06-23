@@ -648,8 +648,8 @@ class TurnContractWithPromptPreview(BaseModel):
     usage_note: str = "Do not stop at this contract. Call getRequiredFilesManifest and all getRequiredFilesChunk chunks."
 
 
-_remove_routes(CONTEXT_PATH, {"GET"}, "getSessionContext")
-_remove_routes(TURN_CONTRACT_PATH, {"GET"}, "getSessionTurnContract")
+_remove_routes(CONTEXT_PATH, {"GET"})
+_remove_routes(TURN_CONTRACT_PATH, {"GET"})
 
 
 @app.get(CONTEXT_PATH, response_model=SizeGuardContextResponse, operation_id="getSessionContext")
