@@ -33,6 +33,10 @@ DEFAULT_CHUNK_MAX_CHARS = 18000
 DEFAULT_CHUNK_MAX_ITEMS = 4
 
 ALWAYS_SMALL_FILES = [
+    "gpt/scene_format.md",
+    "gpt/locks/gameplay_visible_scene_before_state_and_no_status_summary.md",
+    "gpt/locks/player_input_anchor_lock.md",
+    "gpt/locks/gameplay_response_gate.md",
     "state/relationship_memory_rules_1206.json",
     "state/player_input_parsing_rules.json",
     "state/narrative_director_rules.json",
@@ -64,6 +68,7 @@ CHARACTER_ALIASES = {
     "raiden": "raiden",
     "raiden_sterling": "raiden",
     "char_raiden": "raiden",
+    "парень с пирсингом": "raiden",
 
     "irey": "irey",
     "char_irey": "irey",

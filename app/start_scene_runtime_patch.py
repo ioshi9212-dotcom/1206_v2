@@ -30,7 +30,7 @@ for _name in ["scenes", "data"]:
     except Exception:
         pass
 
-app.version = "0.3.63-start-scene-exact-output"
+app.version = "0.3.108-start-scene-day-phase"
 
 START_SCENE_ID = "start_scene"
 START_SCENE_PATH = "scenes/start_scene.md"
@@ -43,7 +43,7 @@ VOICE_IDENTITY_MAP = {
 }
 
 START_CHARACTER_IDS = ["akira", "jun", "irey", "emma"]
-CONDITIONAL_CHARACTER_IDS = ["raiden"]
+CONDITIONAL_CHARACTER_IDS = ["raiden", "ray"]
 
 START_CHARACTER_FILES: dict[str, list[str]] = {
     "akira": [
@@ -198,9 +198,8 @@ def _ensure_start_state(session_id: str) -> dict[str, Any]:
                 "scene_id": START_SCENE_ID,
                 "current_date": "1206-08-31",
                 "date": "1206-08-31",
-                "current_time": "02:40",
-                "time": "02:40",
-                "time_of_day": "ночь",
+                "current_day_phase": "поздняя ночь",
+                "time_of_day": "поздняя ночь",
                 "current_location_id": "jun_house_akira_room",
                 "location_id": "jun_house_akira_room",
                 "current_location_text": "дом Джуна Картера, комната Акиры",
@@ -213,7 +212,7 @@ def _ensure_start_state(session_id: str) -> dict[str, Any]:
                 "allowed_main_characters": _merge_unique(current.get("allowed_main_characters"), START_CHARACTER_IDS + CONDITIONAL_CHARACTER_IDS),
                 "visible_inventory": ["записка: Рэй / Восточный сектор"],
                 "nearby_items": ["дверь", "окно", "стол", "записка"],
-                "current_scene_goal": "Стартовая сцена: Акира просыпается в 02:40, слышит голоса Эммы и Ирэя внизу, Джун тянет время, записка ведёт к Рэю / Восточному сектору.",
+                "current_scene_goal": "Стартовая сцена: поздняя ночь. Акира просыпается от голосов Эммы и Ирэя внизу; Джун тянет время; записка ведёт к Рэю / Восточному сектору.",
                 "voice_identity_map_hidden": dict(VOICE_IDENTITY_MAP),
                 "start_scene_file": START_SCENE_PATH,
                 "start_scene_logic_file": START_SCENE_LOGIC_PATH,
@@ -221,16 +220,16 @@ def _ensure_start_state(session_id: str) -> dict[str, Any]:
             }
         )
         current["weather"] = {
-            "summary": "прохладная тихая ночь; снаружи влажный воздух и слабый ветер со стороны моря",
+            "summary": "прохладная поздняя ночь; подробности погоды использовать только если они влияют на действие",
             "temperature_feel": "прохладно",
-            "details": ["влажный воздух", "слабый ветер со стороны моря"],
+            "details": [],
         }
         akira_state = current.setdefault("akira_state", {})
         if isinstance(akira_state, dict):
             akira_state.update(
                 {
-                    "visible_state": "резко проснулась; сердце бьётся слишком быстро",
-                    "internal_state": "напряжена; память держит только последние два года",
+                    "visible_state": "резко проснулась; внешне собрана",
+                    "internal_state": "эмоции заблокированы; память держит только последние два года",
                     "body_state": "тело собрано раньше памяти",
                     "hair_state": "сонные растрёпанные волосы",
                 }

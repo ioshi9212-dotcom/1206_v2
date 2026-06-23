@@ -11,10 +11,9 @@ import app.lean_context_loading_runtime_patch as lean_context  # noqa: F401
 import app.akira_spatial_water_trigger_runtime_patch as akira_water_trigger  # noqa: F401
 import app.state_persistence_runtime_patch as state_persistence  # noqa: F401
 import app.state_memory_relationship_context_runtime_patch as state_memory_context  # noqa: F401
-import app.time_flow_runtime_fix as time_flow_fix  # noqa: F401
 import app.current_scene_context_filter_runtime_patch as current_scene_context_filter  # noqa: F401
 
-app.version = "0.3.107-1206-production-current-scene-context-filter"
+app.version = "0.3.108-1206-east-sector-day-phase-render"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -71,9 +70,9 @@ def _openapi() -> dict[str, Any]:
             "/health": {"get": {"operationId": "health", "summary": "Check API health and runtime version", "responses": {"200": _response("API health status", "HealthResponse")}}},
             "/api/v1/sessions": {"post": {"operationId": "createSession", "summary": "Create a new gameplay session", "requestBody": {"required": False, "content": {"application/json": {"schema": _object_schema({"session_id": {"type": "string"}, "title": {"type": "string"}, "reset": {"type": "boolean"}})}}}, "responses": {"200": _response("Created session", "SessionResponse")}}},
             "/api/v1/sessions/{session_id}/context": {"get": {"operationId": "getSessionContext", "summary": "Get compact session context", "parameters": [_session_path_param()], "responses": {"200": _response("Compact session context", "SizeGuardContextResponse")}}},
-            "/api/v1/sessions/{session_id}/turn-contract": {"get": {"operationId": "getSessionTurnContract", "summary": "Get compact current-scene-only turn contract", "parameters": [_session_path_param()], "responses": {"200": _response("Turn contract", "TurnContractWithPromptPreview")}}},
-            "/api/v1/sessions/{session_id}/required-files-manifest": {"get": {"operationId": "getRequiredFilesManifest", "summary": "Get current-scene-only required files manifest and chunk count", "parameters": [_session_path_param()], "responses": {"200": _response("Required files manifest", "RequiredFilesManifestResponse")}}},
-            "/api/v1/sessions/{session_id}/required-files-chunk": {"get": {"operationId": "getRequiredFilesChunk", "summary": "Get one chunk of current-scene-only required file contents", "parameters": [_session_path_param()] + _chunk_params(), "responses": {"200": _response("Required files chunk", "RequiredFilesChunkResponse")}}},
+            "/api/v1/sessions/{session_id}/turn-contract": {"get": {"operationId": "getSessionTurnContract", "summary": "Get compact current-scene day-phase turn contract", "parameters": [_session_path_param()], "responses": {"200": _response("Turn contract", "TurnContractWithPromptPreview")}}},
+            "/api/v1/sessions/{session_id}/required-files-manifest": {"get": {"operationId": "getRequiredFilesManifest", "summary": "Get current-scene required files manifest and chunk count", "parameters": [_session_path_param()], "responses": {"200": _response("Required files manifest", "RequiredFilesManifestResponse")}}},
+            "/api/v1/sessions/{session_id}/required-files-chunk": {"get": {"operationId": "getRequiredFilesChunk", "summary": "Get one chunk of current-scene required file contents", "parameters": [_session_path_param()] + _chunk_params(), "responses": {"200": _response("Required files chunk", "RequiredFilesChunkResponse")}}},
             "/api/v1/sessions/{session_id}/required-files-bundle": {"get": {"operationId": "getRequiredFilesBundle", "summary": "Backward-compatible required files chunk endpoint", "parameters": [_session_path_param()] + _chunk_params(), "responses": {"200": _response("Required files chunk", "RequiredFilesChunkResponse")}}},
             "/api/v1/sessions/{session_id}/scene-packet": {"get": {"operationId": "getScenePacket", "summary": "Get one compact scene packet", "parameters": [_session_path_param()], "responses": {"200": {"description": "Scene packet", "content": {"application/json": {"schema": _object_schema()}}}}}},
             "/api/v1/sessions/{session_id}/turn": {"post": {"operationId": "processTurn", "summary": "Return exact first start scene text for start command", "parameters": [_session_path_param()], "requestBody": {"required": True, "content": {"application/json": {"schema": _object_schema({"player_input": {"type": "string"}, "mode": {"type": "string", "default": "play"}, "include_file_contents": {"type": "boolean", "default": True}, "state_patches": _object_schema()}, required=["player_input"])}}}, "responses": {"200": _response("Processed turn", "ProcessTurnResponse")}}},
