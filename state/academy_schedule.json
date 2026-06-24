@@ -1,4 +1,0 @@
-{
-  "state_id": "legacy_schedule_placeholder",
-  "note": "Legacy compatibility only. Active calendar is calendar/*.yaml + state/calendar_runtime.json."
-}

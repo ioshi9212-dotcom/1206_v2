@@ -1,9 +1,0 @@
-{
-  "schema": "power_state_v1",
-  "project": "akira-main-1206",
-  "akira": {
-    "flow": "blocked_by_self",
-    "conscious_access": "none_or_fragmentary",
-    "body_memory": true
-  }
-}
