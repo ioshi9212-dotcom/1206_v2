@@ -180,7 +180,10 @@ A gameplay answer must include:
 5. Character fidelity: every NPC line/reaction must fit loaded character files, relationships, calendar, lore and knowledge sources.
 6. At least one scene movement: plot, relationship, knowledge, conflict, reputation, body/energy state, rumor, schedule, open_thread or future hook.
 7. Stop at a point where the player can answer if a direct hook to Akira appears.
-8. Bottom block: Что можно сделать / Что Акира могла бы сказать / Мысли Акиры.
+8. Bottom block exactly: Что можно сделать / Что Акира могла бы сказать / Мысли Акиры / Состояние / Отношения.
+9. Bottom block hard limits: max 3 actions, max 3 possible Akira lines, max 3 Akira thoughts; delete extra items before final output.
+10. Akira thoughts must be first-person, short, and tied to the current frame.
+11. Inventory, clothes and item lists belong only in the scene header when confirmed; never add Inventory/Items/Clothes/Gear sections below, and never put inventory inside Состояние.
 
 FORBIDDEN FINAL OUTPUT IN PLAY MODE:
 - API/debug/contract commentary.
