@@ -1,0 +1,131 @@
+# Calendar day template for 1206 v2
+# Один такой файл на каждый день: calendar/days/YYYY-MM-DD.yaml
+
+date: "1206-MM-DD"
+year: 1206
+day_month: ""
+weekday: ""
+time_start: "00:00"
+label: ""
+
+day_type:
+  - normal_day
+  # variants: hard_event, soft_event, restricted_day, raid_day, recovery_day, travel_day, social_day
+
+scene_general_info:
+  summary: ""
+  atmosphere:
+    - ""
+  current_pressure:
+    - ""
+  what_should_happen_today:
+    - ""
+  what_can_happen_if_player_changes_route:
+    - ""
+
+active_characters:
+  # Писать только тех, кто реально активен/доступен в этот день/beat.
+  - id: "akira"
+    name: "Акира"
+    role: "pov"
+    active_from: "00:00"
+    active_until: null
+    files:
+      main: "characters/akira/akira_main_profile.yaml"
+      knowledge: "characters/akira/akira_knowledge_connections.yaml"
+      hidden: "characters/akira/akira_hidden_past.yaml"
+      thought_triggers: "characters/akira/akira_thought_triggers.yaml"
+    scene_goal: ""
+    visible_goal: ""
+    hidden_goal: ""
+    knows_now:
+      - ""
+    must_not_know:
+      - ""
+    pov_rules:
+      - "Игрок управляет Акирой. Не играть за неё полный диалог."
+
+nearby_or_conditional_characters:
+  - id: ""
+    name: ""
+    condition: ""
+    files:
+      main: ""
+      knowledge: ""
+      hidden: ""
+    scene_goal: ""
+    visible_goal: ""
+    hidden_goal: ""
+    must_not_know:
+      - ""
+
+scene_rules:
+  - "Календарь задаёт рамки дня, персонажей, цели и запреты, но не пишет сцену вместо ИИ."
+  - "Не прибивать будущие сцены к прошлой локации; после смены места шапка берёт current_location_text/current_location_id из state."
+  - "Не раскрывать hidden lore автоматически."
+  - "Перед репликой NPC проверять его knowledge-файл и текущий источник знания."
+
+time_flow:
+  start_time: "00:00"
+  time_source: "state/current_state.json"
+  rules:
+    - "Один ход не равен одной минуте."
+    - "Время = смысловая длительность действий, диалога, пауз, перемещений и ожидания."
+    - "Если за сцену произошли несколько действий, реплик, взглядов, пауз или перемещение — прошло несколько минут."
+    - "После сцены сохранить current_state.time и last_time_advance_min через applyTurnResult."
+  typical_delta_minutes:
+    instant_reaction: "0-1"
+    short_exchange: "1-2"
+    normal_dialogue: "3-7"
+    tense_dialogue: "5-15"
+    movement_inside_small_location: "2-8"
+    movement_between_base_zones: "5-15"
+    food_or_coffee: "10-25"
+    medical_check: "10-40"
+    training_block: "20-90"
+    sleep_or_timeskip: "explicit / next meaningful beat"
+
+beats:
+  - beat_id: ""
+    time: "00:00"
+    duration_hint_min: "3-8"
+    location_id: ""
+    location_text: ""
+    required: false
+    status: "pending"
+    character_ids:
+      - ""
+    file_load:
+      always:
+        - ""
+      conditional:
+        - ""
+    goals_by_character:
+      akira: ""
+    scene_info:
+      - ""
+    allowed:
+      - ""
+    forbidden:
+      - ""
+
+conditional_windows:
+  - event_id: ""
+    earliest_time: "00:00"
+    latest_time: null
+    condition_any:
+      - ""
+    character_ids:
+      - ""
+    summary: ""
+    allowed:
+      - ""
+    forbidden:
+      - ""
+
+scene_forbidden:
+  - "Не использовать future_dates как знание NPC."
+  - "Не раскрывать hidden lore авторским монологом."
+  - "Не давать NPC знания, которых нет в knowledge/state."
+  - "Не делать микрошаги вместо сцены."
+  - "Не двигать время механически на 1 минуту."
