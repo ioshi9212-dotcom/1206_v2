@@ -11,12 +11,13 @@ import app.character_registry_runtime_patch as character_registry  # noqa: F401
 import app.lean_context_loading_runtime_patch as lean_context  # noqa: F401
 import app.akira_spatial_water_trigger_runtime_patch as akira_water_trigger  # noqa: F401
 import app.state_persistence_runtime_patch as state_persistence  # noqa: F401
+import app.knowledge_state_runtime_patch as knowledge_state_runtime  # noqa: F401
 import app.time_flow_runtime_fix as time_flow_fix  # noqa: F401
 import app.state_memory_relationship_context_runtime_patch as state_memory_context  # noqa: F401
 import app.current_scene_context_filter_runtime_patch as current_scene_context  # noqa: F401
 import app.day_phase_calendar_override_runtime_patch as day_phase_calendar_override  # noqa: F401
 
-app.version = "0.3.114-1206-day-phase-calendar-v1"
+app.version = "0.3.115-1206-russian-knowledge-state-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -102,4 +103,4 @@ app.openapi_schema = None
 app.openapi = _openapi  # type: ignore[method-assign]
 
 # Final runtime version after all route/context patches are imported.
-app.version = "0.3.114-1206-day-phase-calendar-v1"
+app.version = "0.3.115-1206-russian-knowledge-state-v1"
