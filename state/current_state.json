@@ -3,11 +3,12 @@
   "project_slug": "akira-1206v2",
   "story": "akira_1206v2",
   "current_date": "1206-08-31",
-  "current_time": "02:40",
+  "current_day_phase": "поздняя ночь",
+  "time_of_day": "поздняя ночь",
   "current_location_id": "jun_house",
   "current_location_text": "Дом Джуна",
   "weather": {
-    "summary": "ночь, воздух неподвижный",
+    "summary": "поздняя ночь, воздух неподвижный",
     "temperature_feel": null,
     "details": []
   },
@@ -35,19 +36,21 @@
     "akira",
     "jun"
   ],
-  "current_scene_goal": "Старт 1206 v2: ночная сцена в доме Джуна в 02:40.",
+  "current_scene_goal": "Старт 1206 v2: поздняя ночь в доме Джуна.",
   "last_player_input": null,
   "scene_count": 0,
   "rules": [
     "Use only akira-1206v2 data.",
-    "Start date is 1206-08-31, time 02:40.",
+    "Start date is 1206-08-31, phase is поздняя ночь.",
+    "Use current_day_phase/time_of_day for visible scene headers; current_time is legacy only and must not be rendered as exact minutes.",
     "Start location is Jun's house, but future headers must use current_location_text dynamically.",
     "Do not reveal hidden lore automatically.",
     "Do not stretch time without reason.",
     "Use only visible real items in scene header."
   ],
   "start_day_notes": [
-    "Старт: 31 августа 1206, 02:40, дом Джуна.",
-    "Дальнейшая локация в шапке всегда зависит от current_state.current_location_text."
+    "Старт: 31 августа 1206, поздняя ночь, дом Джуна.",
+    "Дальнейшая локация в шапке всегда зависит от current_state.current_location_text.",
+    "Райден и другие условные события запускаются по фазе дня и сценическим условиям, не по точной минуте."
   ]
 }
