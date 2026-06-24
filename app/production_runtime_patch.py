@@ -5,6 +5,7 @@ from typing import Any
 import app.start_scene_runtime_patch as start_runtime
 from app.start_scene_runtime_patch import app
 import app.response_size_guard_runtime_patch as size_guard  # noqa: F401
+import app.bottom_panel_strict_runtime_patch as bottom_panel_strict  # noqa: F401
 import app.pov_switch_runtime_patch as pov_switch  # noqa: F401
 import app.character_registry_runtime_patch as character_registry  # noqa: F401
 import app.lean_context_loading_runtime_patch as lean_context  # noqa: F401
