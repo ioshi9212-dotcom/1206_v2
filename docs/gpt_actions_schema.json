@@ -1,0 +1,455 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Akira 1206 v2 Actions",
+    "description": "Stable GPT Actions schema for Akira 1206 v2. Use processTurn for the exact first start scene.",
+    "version": "0.3.71-1206-production-start-sizeguard"
+  },
+  "servers": [
+    {
+      "url": "https://1206v2-production.up.railway.app"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "summary": "Check API health and runtime version",
+        "responses": {
+          "200": {
+            "description": "API health status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions": {
+      "post": {
+        "operationId": "createSession",
+        "summary": "Create or initialize a gameplay session",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "session_id": {
+                    "type": "string",
+                    "default": "main-1206-v2"
+                  },
+                  "title": {
+                    "type": "string",
+                    "default": "Akira 1206 v2"
+                  },
+                  "reset": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/turn": {
+      "post": {
+        "operationId": "processTurn",
+        "summary": "Process a gameplay turn. For player_input='начнем', returns the exact first start scene.",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "main-1206-v2"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "required": [
+                  "player_input"
+                ],
+                "properties": {
+                  "player_input": {
+                    "type": "string"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "default": "play"
+                  },
+                  "include_file_contents": {
+                    "type": "boolean",
+                    "default": true
+                  },
+                  "state_patches": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Processed turn with scene_text or compact contract",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "session_id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "scene_text": {
+                      "type": "string"
+                    },
+                    "scene_packet": {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/context": {
+      "get": {
+        "operationId": "getSessionContext",
+        "summary": "Get compact session context",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "main-1206-v2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Compact session context",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/turn-contract": {
+      "get": {
+        "operationId": "getSessionTurnContract",
+        "summary": "Get compact turn contract",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "main-1206-v2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Turn contract",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/required-files-manifest": {
+      "get": {
+        "operationId": "getRequiredFilesManifest",
+        "summary": "Get required files manifest and chunk count",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "main-1206-v2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Required files manifest",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/required-files-chunk": {
+      "get": {
+        "operationId": "getRequiredFilesChunk",
+        "summary": "Get one chunk of required file contents",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "main-1206-v2"
+            }
+          },
+          {
+            "name": "chunk_index",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "max_chars",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 30000
+            }
+          },
+          {
+            "name": "max_items",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 3
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Required files chunk",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/required-files-bundle": {
+      "get": {
+        "operationId": "getRequiredFilesBundle",
+        "summary": "Backward-compatible required files chunk endpoint",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "main-1206-v2"
+            }
+          },
+          {
+            "name": "chunk_index",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "max_chars",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 30000
+            }
+          },
+          {
+            "name": "max_items",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 3
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Required files chunk",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/scene-packet": {
+      "get": {
+        "operationId": "getScenePacket",
+        "summary": "Get compact scene packet",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "main-1206-v2"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scene packet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/apply-turn-result": {
+      "post": {
+        "operationId": "applyTurnResult",
+        "summary": "Apply meaningful scene changes to session state",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "main-1206-v2"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "turn_file": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "dry_run": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "visible_scene_text": {
+                    "type": "string"
+                  },
+                  "scene_text": {
+                    "type": "string"
+                  },
+                  "state_patches": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Apply result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
