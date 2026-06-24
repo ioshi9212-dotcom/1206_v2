@@ -1,0 +1,18 @@
+{
+  "schema": "calendar_runtime_v2_day_phase",
+  "project": "akira-main-1206",
+  "current_date": "1206-08-31",
+  "current_day_phase": "поздняя ночь",
+  "time_of_day": "поздняя ночь",
+  "active_window": "start_scene_late_night",
+  "completed_events": [],
+  "pending_events": [
+    "raiden_arrival_late_night",
+    "samuel_people_predawn_window"
+  ],
+  "rules": [
+    "Use day phases and scene conditions, not exact minute timestamps.",
+    "Do not trigger Raiden by exact minute.",
+    "Do not trigger Samuel people shortly after Raiden by exact minute."
+  ]
+}

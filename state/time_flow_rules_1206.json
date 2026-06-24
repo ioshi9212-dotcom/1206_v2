@@ -1,0 +1,60 @@
+{
+  "schema": "time_flow_rules_1206_v16_day_phase",
+  "principle": "Use narrative day phases instead of exact minute timestamps. Time follows scene logic, calendar pressure, travel and waiting; not turn count.",
+  "visible_time_rule": {
+    "do_not_show_exact_minutes": true,
+    "header_uses_day_phase": true,
+    "allowed_phases": [
+      "ночь",
+      "поздняя ночь",
+      "предрассвет",
+      "раннее утро",
+      "утро",
+      "позднее утро",
+      "обед",
+      "день",
+      "вечер",
+      "поздний вечер"
+    ],
+    "legacy_time_fields": "current_time/time may exist for old compatibility, but gameplay rendering and calendar triggers should use current_day_phase/time_of_day."
+  },
+  "phase_progression": {
+    "current_phase_is_not_per_turn": "Do not advance one phase per turn.",
+    "advance_when": [
+      "meaningful waiting",
+      "travel",
+      "long search",
+      "medical check",
+      "several scenes of delay",
+      "sleep/timeskip",
+      "calendar event condition"
+    ],
+    "do_not_advance_when": [
+      "single glance",
+      "short reply",
+      "one physical reaction",
+      "instant threat response"
+    ],
+    "npc_activity_counts": "NPCs act during Akira's pauses and travel. They do not freeze, but this changes scene pressure more often than it changes the day phase."
+  },
+  "event_windows": {
+    "raiden": {
+      "phase": "поздняя ночь",
+      "arrival_rule": "later, not in the first couple of minutes/scenes; when Emma/Kairos energy trace is strong enough and Raiden logically follows it from the sea overlook route",
+      "not_exact_time": true
+    },
+    "samuel_people": {
+      "phase": "предрассвет",
+      "arrival_rule": "only after a longer delay if Akira has not reached Eastern Sector; they follow traces to Jun house/road/outside area and search for signs of Akira",
+      "not_shortly_after_raiden": true
+    }
+  },
+  "forbidden": [
+    "do_not_show_02_40_03_02_03_23_as_hard_visible_clock",
+    "do_not_use_one_turn_equals_one_minute",
+    "do_not_freeze_other_characters_while_akira_thinks_or_waits",
+    "do_not_trigger_raiden_by_exact_minute",
+    "do_not_trigger_samuel_people_five_minutes_after_raiden",
+    "do_not_reset_to_start_time_after_each_output"
+  ]
+}

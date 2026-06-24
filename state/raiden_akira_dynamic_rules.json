@@ -1,0 +1,32 @@
+{
+  "schema": "raiden_akira_dynamic_rules_v1",
+  "project": "akira-main-1206",
+  "rules": {
+    "raiden_must_not_say": [
+      "я как будто тебя знаю",
+      "мне кажется, я должен был тебя знать",
+      "я что-то чувствую, но не помню",
+      "почему мне кажется, что нас связывает прошлое"
+    ],
+    "raiden_does_not_understand_memory_erasure": true,
+    "first_phase": [
+      "does not chase Akira without reason",
+      "distances after ensuring safety",
+      "helps through action then cuts contact",
+      "rationalizes pull as irritation/threat/situation"
+    ],
+    "jealousy": [
+      "may happen",
+      "not recognized as jealousy",
+      "manifests as cold/grotesque/sudden sharpness"
+    ],
+    "surface_dynamic": [
+      "tension",
+      "irritation",
+      "provocation",
+      "searching for flaws",
+      "hidden pull under visible annoyance"
+    ],
+    "location_rule": "Do not invent new locations without contract/calendar/required_files/location registry/player movement."
+  }
+}

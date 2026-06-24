@@ -1,0 +1,32 @@
+{
+  "relationship_score_panel": {
+    "akira__jun": {
+      "display_name": "Джун",
+      "visible_label": "Джун",
+      "score": 0,
+      "label": "неясно",
+      "source": "default_start_zero"
+    },
+    "akira__irey": {
+      "display_name": "Ирэй",
+      "visible_label": "незнакомый мужской голос / беловолосый мужчина",
+      "score": 0,
+      "label": "неясно",
+      "source": "default_start_zero"
+    },
+    "akira__emma": {
+      "display_name": "Эмма",
+      "visible_label": "женский голос снизу / беловолосая девушка",
+      "score": 0,
+      "label": "угроза неясна",
+      "source": "default_start_zero"
+    },
+    "akira__ray": {
+      "display_name": "Рэй",
+      "visible_label": "имя из записки",
+      "score": 0,
+      "label": "неясно",
+      "source": "default_start_zero"
+    }
+  }
+}

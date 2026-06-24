@@ -1,0 +1,87 @@
+{
+  "schema": "context_loading_rules_1206_v10_current_scene_agency",
+  "goal": "avoid ResponseTooLarge, wrong NPC knowledge, Akira-centered scenes and metaphor spam",
+  "always_load": [
+    "current_scene_state_slice",
+    "calendar current date",
+    "current scene/day logic",
+    "Akira main/character card",
+    "narrative director rules"
+  ],
+  "character_loading": {
+    "akira": "always main+character because she is POV/player character",
+    "active_present_characters": "main+character only",
+    "past_hidden_files": "load only by topic trigger or strong scene need",
+    "mentioned_characters": "do not load just because they are mentioned",
+    "scheduled_characters": "do not load until their actual time/condition triggers",
+    "conditional_characters": "do not load until active/triggered/present",
+    "future_characters": "do not load just because important later"
+  },
+  "state_loading": {
+    "rule": "load focused current-scene slice, not full story state",
+    "current_scene_slice_contains": [
+      "date/time/location",
+      "visible inventory and nearby items",
+      "current scene goal",
+      "state for present characters only",
+      "relationship slice for present characters only",
+      "knowledge slice for present characters only",
+      "recent relevant scene history only"
+    ],
+    "do_not_load_full_by_default": [
+      "relationships.json",
+      "knowledge_state.json",
+      "scene_history.json",
+      "future_locks_progress.json",
+      "story_lines.json"
+    ]
+  },
+  "topic_triggers": {
+    "samuel": "load only public/needed context; do not reveal hidden Samuel pursuit",
+    "raiden": "ring/cold/cigarettes/white hair/piercing/basketball and only if Raiden is present or directly plot-relevant now",
+    "yuna": "medblock/injury/loss of consciousness/medical observation",
+    "miki": "Sept 1 entry/food/clothes/light/Alex/friend support; do not load Aug 31 without separate condition",
+    "kairos": "only if the scene actually discusses race/energy",
+    "akira_energy": "load hidden/past only on actual memory/energy trigger, not for every poetic water/air phrase"
+  },
+  "scene_director_priority": {
+    "world_not_akira_centered": "NPCs act from their own goals and may interrupt, ignore, leave, help, block, lie or change tactics without waiting for Akira's perfect choice.",
+    "calendar_goal": "Keep the current day/scene goal active. Player choice can branch it, but the calendar and NPC windows still move.",
+    "movement_resolution": "If Akira chooses to move from A to B, resolve by visible logic: she may arrive, be delayed, be stopped, or meet a calendar/physical consequence. Do not guarantee outcome."
+  },
+  "style_and_metaphor_loading": {
+    "rule": "Do not treat air/water/depth/pressure imagery as required atmosphere every turn.",
+    "use_metaphor_only_if": [
+      "energy/spatial sense is actually triggered",
+      "Raiden's cold/air energy is physically present",
+      "real sea/wind/weather matters",
+      "the detail changes action/choice/knowledge"
+    ],
+    "otherwise_use": [
+      "concrete movement",
+      "objects",
+      "body mechanics",
+      "NPC action",
+      "sound, light, fabric, floor, door, distance"
+    ]
+  },
+  "forbidden": [
+    "do_not_dump_all_required_files_in_turn_contract",
+    "do_not_load_all_characters",
+    "do_not_load_mentioned_scheduled_delayed_characters_as_present",
+    "do_not_use_hidden_lore_as_npc_knowledge",
+    "do_not_create_new_locations_without_grounding",
+    "do_not_expose_hidden_lore_as_narrator_fact",
+    "do_not_explain_akira_raiden_hidden_link_in_narration",
+    "do_not_put_unknown_lore_into_akira_thoughts",
+    "do_not_make_all_npcs_wait_for_akira",
+    "do_not_fill_every_scene_with_water_air_metaphors"
+  ],
+  "lore_visibility_rules_v10_1": {
+    "not_word_ban": "Words like Kairos/Samuel are not banned in dialogue.",
+    "narration_rule": "Do not expose lore as narrator fact if POV does not know it.",
+    "akira_thought_rule": "Do not explain hidden lore in Akira's thoughts before memory/scene evidence.",
+    "npc_dialogue_rule": "NPCs may say known/common words naturally.",
+    "hidden_link_rule": "Akira-Raiden hidden link can manifest through effects, never narrator explanation."
+  }
+}

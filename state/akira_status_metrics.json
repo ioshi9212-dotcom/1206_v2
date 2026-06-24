@@ -1,0 +1,42 @@
+{
+  "schema": "akira_status_metrics_v1",
+  "project": "akira-main-1206",
+  "scale": "0..100 unless stated otherwise",
+  "start_1206_08_31": {
+    "memory_access_percent": 8,
+    "learned_about_self_percent": 0,
+    "physical_strength": 30,
+    "endurance": 32,
+    "agility": 45,
+    "combat_skill_active": 35,
+    "combat_skill_hidden_body_memory": 85,
+    "fatigue": 20,
+    "injuries": 0,
+    "energy_access": 0,
+    "energy_control": 0,
+    "visible_capacity": 0
+  },
+  "rules": {
+    "memory_access_percent": "Grows only from real memory flashes/fragments, not from facts told by others.",
+    "learned_about_self_percent": "Grows when Akira learns facts about herself from others/documents, but does not equal memory recovery.",
+    "physical_recovery": "Improves with sleep, food, water, gradual training, stretching, routine.",
+    "overexertion": "If she abruptly performs at old hidden skill level, apply physical backlash: breathlessness, muscle pain, weakness, tremor, fatigue.",
+    "combat_skill": "Active use is lower than hidden body memory. Body may react correctly before conscious memory."
+  },
+  "subtle_memory_triggers_v6": {
+    "raiden_cold": "телесная память может отреагировать на холод/воздух Райдена раньше сознания",
+    "raiden_scent": "хвоя и холод могут казаться знакомыми",
+    "pink_cigarettes": "запах розовых сигарет может вызвать тонкий отклик/желание без прямой памяти",
+    "lip_piercing_scar": "след на губе связан с парным пирсингом, но не даёт прямой памяти сам по себе",
+    "ring_mark": "след на левой руке может реагировать на вид кольца AR, но не раскрывает смысл автоматически"
+  },
+  "hair_attention_v7": {
+    "white_hair": "long, pure white, visually unusual",
+    "social_effect": "can attract looks, not automatic accusations",
+    "raiden_trigger": "may trigger Raiden because of his mother's white hair"
+  },
+  "basketball_v7": {
+    "akira": "basketball is honest; hidden body skill can surface",
+    "raiden": "economical, precise, no-show style; body may recognize Akira's rhythm"
+  }
+}
