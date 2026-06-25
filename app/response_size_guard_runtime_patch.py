@@ -7,7 +7,6 @@ from pydantic import BaseModel, Field
 import app.calendar_scene_runtime_patch as calendar_runtime  # noqa: F401
 from app.calendar_scene_runtime_patch import app
 from app import compact as base
-import app.compact_context_patch as ccp
 
 try:
     import app.context_transport_runtime_patch as context_transport
@@ -29,8 +28,6 @@ BASE_RULE_FILES = [
 LIGHT_STATE_FILES = [
     "state/current_state.json",
     "state/calendar_runtime.json",
-    "state/story_lines.json",
-    "state/knowledge_state.json",
     "state/relationships.json",
     "state/inventory_state.json",
     "state/power_state.json",
@@ -52,48 +49,22 @@ ACTIVE_CHARACTER_FIELDS = [
 
 PAST_TRIGGER_WORDS = [
     "прошл", "памят", "вспом", "забы", "кольц", "шрам", "ребен", "ребён",
-    "берем", "саму", "лаборатор", "эксперимент", "кайрос", "поток", "энерг",
-    "рейден", "райден", "рэй", "ирэй", "хару", "сон", "кошмар",
-    "пространство", "самоблок", "срыв", "эхо",
+    "берем", "саму", "лаборатор", "эксперимент", "кайрос", "поток",
+    "сон", "кошмар", "пространство между", "самоблок", "срыв", "эхо",
 ]
 
 CHARACTER_FOLDERS = {
-    "akira": "akira",
-    "char_akira": "akira",
-    "jun": "jun",
-    "jun_carter": "jun",
-    "char_jun": "jun",
-    "ray": "ray",
-    "ray_carter": "ray",
-    "char_ray": "ray",
-    "raiden": "raiden",
-    "raiden_sterling": "raiden",
-    "char_raiden": "raiden",
-    "парень с пирсингом": "raiden",
-    "irey": "irey",
-    "char_irey": "irey",
-    "emma": "emma",
-    "char_emma": "emma",
-    "yuna": "yuna",
-    "yuna_gray": "yuna",
-    "char_yuna": "yuna",
-    "miki": "miki",
-    "miki_larsen": "miki",
-    "char_miki": "miki",
-    "haru": "haru",
-    "haru_foster": "haru",
-    "samuel": "samuel",
-    "samuel_sterling": "samuel",
+    "akira": "akira", "char_akira": "akira",
+    "jun": "jun", "jun_carter": "jun", "char_jun": "jun",
+    "ray": "ray", "ray_carter": "ray", "char_ray": "ray",
+    "raiden": "raiden", "raiden_sterling": "raiden", "char_raiden": "raiden", "парень с пирсингом": "raiden",
+    "irey": "irey", "char_irey": "irey",
+    "emma": "emma", "char_emma": "emma",
+    "yuna": "yuna", "yuna_gray": "yuna", "char_yuna": "yuna",
+    "miki": "miki", "miki_larsen": "miki", "char_miki": "miki",
+    "haru": "haru", "haru_foster": "haru",
+    "samuel": "samuel", "samuel_sterling": "samuel",
     "alex": "alex",
-}
-
-CHARACTER_FILE_MAP = {
-    cid: [f"characters/{folder}/main.yaml", f"characters/{folder}/character.yaml", f"characters/{folder}/past.yaml"]
-    for cid, folder in CHARACTER_FOLDERS.items()
-}
-
-CHARACTER_EXTRA_FILES = {
-    "akira": ["characters/akira/knowledge.yaml"],
 }
 
 TOPIC_EXTRA_FILES = {
@@ -152,6 +123,13 @@ def _safe_read_json(path: str, session_id: str, default: Any) -> Any:
         return default
 
 
+def _safe_read_text(path: str, session_id: str | None = None) -> str:
+    try:
+        return base.read_text(path, session_id=session_id) if session_id else base.read_text(path)
+    except Exception:
+        return ""
+
+
 def _compact(value: Any, limit: int = 1000) -> Any:
     if value is None or isinstance(value, (int, float, bool)):
         return value
@@ -196,13 +174,12 @@ def _scene_chars(current: dict[str, Any], future: dict[str, Any]) -> list[str]:
     return _unique([_canonical_id(v) for v in values])
 
 
+def _last_player_text(current: dict[str, Any]) -> str:
+    return str(current.get("last_player_input") or "").lower().replace("ё", "е")
+
+
 def _turn_text(current: dict[str, Any]) -> str:
-    parts = [
-        current.get("last_player_input"),
-        current.get("current_scene_goal"),
-        current.get("current_location_text"),
-        current.get("last_visible_scene_text"),
-    ]
+    parts = [current.get("last_player_input"), current.get("current_scene_goal"), current.get("current_location_text")]
     return "\n".join(str(p or "") for p in parts).lower().replace("ё", "е")
 
 
@@ -214,8 +191,9 @@ def _should_load_past(current: dict[str, Any]) -> bool:
     requested = current.get("load_sensitive_character_context")
     if requested is True:
         return True
-    text = str(current.get("last_player_input") or "").lower().replace("ё", "е")
-    text += "\n" + str(current.get("last_visible_scene_text") or "").lower().replace("ё", "е")
+    if isinstance(requested, list) and requested:
+        return True
+    text = _last_player_text(current)
     return _has_any(text, PAST_TRIGGER_WORDS)
 
 
@@ -227,8 +205,8 @@ def _character_files(cid: str, current: dict[str, Any]) -> list[str]:
     files = [
         f"characters/{folder}/main.yaml",
         f"characters/{folder}/character.yaml",
+        f"characters/{folder}/knowledge.yaml",
     ]
-    files.extend(CHARACTER_EXTRA_FILES.get(folder, []))
 
     if _should_load_past(current):
         files.append(f"characters/{folder}/past.yaml")
@@ -270,7 +248,6 @@ def _required_files(current: dict[str, Any], future: dict[str, Any]) -> list[str
         files.extend(_character_files(cid, current))
 
     files.extend(_topic_extra_files(current))
-
     return _unique(files)
 
 
@@ -278,21 +255,31 @@ def _recommended_files_for_context_size_guard(current: dict[str, Any] | None = N
     return _required_files(current or {}, future or {})
 
 
+def _character_knowledge_state(session_id: str, chars: list[str]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for cid in chars:
+        folder = CHARACTER_FOLDERS.get(cid, cid)
+        state_path = f"state/character_knowledge/{folder}.json"
+        state = _safe_read_json(state_path, session_id, {})
+        if state:
+            result[folder] = _compact(state, 1400)
+    return result
+
+
 def _runtime_digest(session_id: str) -> str:
     current = _safe_read_json("state/current_state.json", session_id, {})
     story = _safe_read_json("state/story_lines.json", session_id, {})
-    knowledge = _safe_read_json("state/knowledge_state.json", session_id, {})
     relationships = _safe_read_json("state/relationships.json", session_id, {})
     calendar = _safe_read_json("state/calendar_runtime.json", session_id, {})
     chars = _scene_chars(current, _safe_read_json("state/future_locks_progress.json", session_id, {}))
     payload = {
         "current_scene": _current_state_slice(current),
         "focus_characters": chars,
-        "story_lines": _compact(story, 1600),
-        "knowledge": _compact(knowledge, 2000),
-        "relationships": _compact(_relationship_slice(relationships, chars), 1600),
-        "calendar_runtime": _compact(calendar, 1000),
-        "rule": "Use this digest as compact context. Full character cards are loaded separately by required-files.",
+        "story_lines_compact": _compact(story, 1400),
+        "character_knowledge_state": _character_knowledge_state(session_id, chars),
+        "relationships": _compact(_relationship_slice(relationships, chars), 1400),
+        "calendar_runtime": _compact(calendar, 900),
+        "rule": "Static character knowledge is loaded from characters/<id>/knowledge.yaml. Dynamic memory is per-character state and only loaded for focus characters.",
     }
     import json
     return "# Runtime scene context digest — generated\n```json\n" + json.dumps(payload, ensure_ascii=False, indent=2) + "\n```\n"
@@ -330,16 +317,6 @@ def _current_state_slice(current: dict[str, Any]) -> dict[str, Any]:
     return {key: _compact(current.get(key), 1000) for key in keys if key in current}
 
 
-def _slice_by_chars(state: Any, chars: list[str], limit: int = 1200) -> dict[str, Any]:
-    if not isinstance(state, dict):
-        return {}
-    out: dict[str, Any] = {}
-    for cid in chars:
-        if cid in state:
-            out[cid] = _compact(state[cid], limit)
-    return out
-
-
 def _relationship_slice(relationships: Any, chars: list[str]) -> dict[str, Any]:
     if not isinstance(relationships, dict):
         return {}
@@ -362,11 +339,7 @@ def _small_output_contract() -> dict[str, Any]:
         "format": "1206_visual_novel_header_clean",
         "scene_header_required": True,
         "bottom_blocks": [
-            "✦ Что можно сделать",
-            "✦ Что Акира могла бы сказать",
-            "✦ Мысли Акиры",
-            "✦ Состояние",
-            "✦ Отношения",
+            "✦ Что можно сделать", "✦ Что Акира могла бы сказать", "✦ Мысли Акиры", "✦ Состояние", "✦ Отношения",
         ],
         "rules": [
             "Final gameplay answer must be the scene only, not API/status/debug summary.",
@@ -376,7 +349,7 @@ def _small_output_contract() -> dict[str, Any]:
             "Stop only for a real response point with stakes.",
             "Player controls only Akira; do not invent Akira speech unless written outside parentheses.",
             "Do not decide Akira's new independent choice: answered, trusted, attacked, revealed, agreed, left for a new goal.",
-            "Characters know only what they saw, heard, were told, have in knowledge_state, or can infer from visible signs.",
+            "Characters know only what they saw, heard, were told, have in their character knowledge state, or can infer from visible signs.",
             "Use visible_label/descriptor when Akira does not know the name.",
             "Bottom block hard limits: max 3 actions, max 3 possible Akira lines, max 3 Akira thoughts.",
             "Bottom-block actions must have stakes; no micro-actions without consequence.",
@@ -393,6 +366,7 @@ def _small_prompt_preview(chars: list[str], required_files: list[str]) -> str:
         "- Story-scene pacing: complete declared action chains to the nearest meaningful response point.\n"
         "- Do not fragment ordinary movement into step-by-step choices.\n"
         "- Stop only for a real response point with stakes.\n"
+        "- Static knowledge: characters/<id>/knowledge.yaml. Dynamic memory: per-character state only.\n"
         "- Do not mention rules/mechanics/directorial wording in visible prose.\n"
         f"- Focus characters/internal ids: {', '.join(chars)}.\n"
         f"- Required files count: {len(required_files)}.\n"
@@ -558,13 +532,11 @@ def get_session_turn_contract_size_guard(session_id: str) -> TurnContractWithPro
     base.ensure_session(sid)
     current = _safe_read_json("state/current_state.json", sid, {})
     future = _safe_read_json("state/future_locks_progress.json", sid, {})
-    knowledge = _safe_read_json("state/knowledge_state.json", sid, {})
     inventory = _safe_read_json("state/inventory_state.json", sid, {})
     relationships = _safe_read_json("state/relationships.json", sid, {})
     story_lines = _safe_read_json("state/story_lines.json", sid, {})
     chars = _scene_chars(current, future)
     files = _required_files(current, future)
-    knowledge_source = knowledge.get("персонажи", knowledge) if isinstance(knowledge, dict) else {}
     return TurnContractWithPromptPreview(
         session_id=sid,
         active_character_ids=_unique(current.get("active_characters", []) or current.get("active_character_ids", []) or []),
@@ -576,7 +548,7 @@ def get_session_turn_contract_size_guard(session_id: str) -> TurnContractWithPro
             "Then call getRequiredFilesChunk from chunk_index=0 until has_more=false.",
             "Do not render gameplay from compact contract alone.",
         ],
-        knowledge_table=_slice_by_chars(knowledge_source, chars),
+        knowledge_table=_character_knowledge_state(sid, chars),
         inventory_contract={
             "visible_inventory": _compact(current.get("visible_inventory", []), 1000),
             "nearby_items": _compact(current.get("nearby_items", []), 1000),
@@ -584,7 +556,7 @@ def get_session_turn_contract_size_guard(session_id: str) -> TurnContractWithPro
             "akira_inventory_state": _compact((inventory.get("akira") or {}) if isinstance(inventory, dict) else {}, 1000),
         },
         relationship_context=_relationship_slice(relationships, chars),
-        story_context=_compact(story_lines, 1800) if isinstance(story_lines, dict) else {},
+        story_context=_compact(story_lines, 1400) if isinstance(story_lines, dict) else {},
         prompt_preview=_small_prompt_preview(chars, files),
     )
 
@@ -618,16 +590,4 @@ def get_required_files_bundle(session_id: str, chunk_index: int = 0, max_chars: 
 
 base.active_scene_characters = _scene_chars
 base.recommended_files_for_context = _recommended_files_for_context_size_guard
-ccp.active_scene_characters = _scene_chars
-ccp.recommended_files_for_context = _recommended_files_for_context_size_guard
-ccp._required_file_parts = _required_file_parts
-ccp._chunk_loaded_parts = _chunk_loaded_parts
-ccp._required_files_chunk_response = _required_files_chunk_response
-
-if context_transport is not None:
-    context_transport.lean_recommended_files_for_context = _recommended_files_for_context_size_guard
-    context_transport.required_file_parts_safe = _required_file_parts
-    context_transport.chunk_loaded_parts_safe = _chunk_loaded_parts
-    context_transport.required_files_chunk_response_safe = _required_files_chunk_response
-
-app.version = "0.3.117-1206-clean-runtime-v1"
+app.version = "0.3.118-1206-split-character-knowledge-v1"
