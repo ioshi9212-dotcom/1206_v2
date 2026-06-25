@@ -43,7 +43,7 @@ active_characters:
       main: "characters/irey/main.yaml"
       character: "characters/irey/character.yaml"
       past: "characters/irey/past.yaml"
-    scene_goal: "найти Акиру первым и не отдать её Самуэлю"
+    scene_goal: "найти Акиру первым и не отдать её Самуэлю, быть рядом даже если не согласится идти с ним, не дать Эмме навредить Акире, по возможности комнутся, чтобы создать якорь через способность"
   - id: emma
     files:
       main: "characters/emma/main.yaml"
@@ -57,11 +57,13 @@ conditional_characters:
       main: "characters/raiden/main.yaml"
       character: "characters/raiden/character.yaml"
       past: "characters/raiden/past.yaml"
+      scene_goal: "узнать причину выброса энергии кайроса, понять почему Акира цепляет. распознать угрозу, вызвать Восточный сектор, отвезти Акиру в восточный сектор, по возможночти захватить Ирэя и Эмму с помощью Восточного сектора, действет как рейдер и командир, цепляется за Акиру, со необьяснимым желанием ее забрать и защитить"
   - id: ray
     files:
       main: "characters/ray/main.yaml"
       character: "characters/ray/character.yaml"
       past: "characters/ray/past.yaml"
+      scene_goal: "Встретить Акиру в восточном секторе или раньше, если будет крючок, не раскрывать родство, обеспечить ей безопасность, с помощиью контроля и стен восточного сектора, не раскрывать ей ничего, не выдавать как за брата, скрывать фамилию, Джуна так же укрыть на восточном секторе"
   - id: yuna
     files:
       main: "characters/yuna/main.yaml"
@@ -83,7 +85,7 @@ timeline:
       - "люди Самуэля"
       - "имена Ирэя и Эммы до источника"
 
-  - id: raiden_arrival_late_night
+  - id: raiden
     phase: "поздняя ночь"
     type: "conditional_required_window"
     condition:
@@ -166,7 +168,7 @@ branches:
       - "идёт с Акирой"
       - "задержан Восточным сектором"
 
-raiden_jacket_hook:
+raiden:
   goal: "по возможности логично оставить косуху Райдена у Акиры"
   allowed_reasons:
     - "холод"
