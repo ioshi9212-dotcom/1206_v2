@@ -181,14 +181,36 @@ base.apply_relationship_changes = apply_relationship_changes_robust
 remove_route(APPLY_TURN_RESULT_PATH, "POST")
 
 
+def _payload_from_request_or_turn_file(sid: str, request: ccp.ApplyTurnResultWithVisibleSceneRequest):
+    try:
+        return base.read_turn_payload(sid, request)
+    except Exception:
+        if isinstance(request.data, dict):
+            return "inline", request.data
+        if request.visible_scene_text or request.render_packet:
+            payload = {}
+            if request.visible_scene_text:
+                payload["visible_scene_text"] = request.visible_scene_text
+                payload["scene_text"] = request.visible_scene_text
+            if isinstance(request.render_packet, dict):
+                payload["render_packet"] = request.render_packet
+            return "inline_visible_scene", payload
+        raise
+
+
 @app.post(APPLY_TURN_RESULT_PATH, response_model=ccp.ApplyTurnResultWithVisibleSceneResponse, operation_id="applyTurnResult")
 def apply_turn_result_persistent(session_id: str, request: ccp.ApplyTurnResultWithVisibleSceneRequest = ccp.ApplyTurnResultWithVisibleSceneRequest()):
     sid = base.safe_session_id(session_id); base.ensure_session(sid)
-    source, payload = base.read_turn_payload(sid, request)
+    source, payload = _payload_from_request_or_turn_file(sid, request)
     changed = []
     if apply_relationship_changes_robust(sid, payload, request.dry_run): changed.append("state/relationships.json")
     for path, names in list(base.STATE_SECTION_MAP) + [(CALENDAR_RUNTIME_FILE, ["calendar_runtime_changes","calendar_runtime","calendar_changes"])]:
-        if apply_json_section_robust(sid, payload, path, names, request.dry_run): changed.append(path)
+        if apply_json_section_robust(sid, payload, path, names, request.dry_run):
+            if path == "state/knowledge_state.json":
+                changed.extend(getattr(base, "LAST_KNOWLEDGE_CHANGED_FILES", []) or [path])
+            else:
+                changed.append(path)
+    changed = list(dict.fromkeys(changed))
     scene_text = extract_scene_text(request, payload)
     if append_scene_history(sid, payload, scene_text, changed, request.dry_run): changed.append(SCENE_HISTORY_FILE)
     if not request.dry_run and write_world_integrity_state(sid, changed): changed.append(WORLD_INTEGRITY_STATE_FILE)
@@ -199,4 +221,4 @@ def apply_turn_result_persistent(session_id: str, request: ccp.ApplyTurnResultWi
         if LAST_APPLY_RESULT_FILE not in changed: changed.append(LAST_APPLY_RESULT_FILE)
     return ccp.ApplyTurnResultWithVisibleSceneResponse(status="applied" if changed else "no_changes_detected", session_id=sid, source=source, dry_run=request.dry_run, changed_files=changed, visible_scene_text=scene_text or request.visible_scene_text, final_scene_text=scene_text or request.visible_scene_text, render_packet_received=isinstance(request.render_packet, dict))
 
-app.version = "0.3.47-state-persistence-v2"
+app.version = "0.3.118-state-persistence-inline-visible-scene-v1"

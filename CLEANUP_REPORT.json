@@ -43,5 +43,30 @@
     "Карточки characters/** не переписывались и не редактировались.",
     "Старые *_main_profile.yaml / *_knowledge_connections.yaml сохранены как файлы, но clean runtime их не грузит.",
     "Scattered locks удалены; рабочее правило собрано в gpt/locks/runtime_scene_rules_digest.md."
-  ]
+  ],
+  "changes": [],
+  "knowledge_split_v1": {
+    "created_static_files": [
+      "characters/akira/knowledge.yaml",
+      "characters/emma/knowledge.yaml",
+      "characters/irey/knowledge.yaml",
+      "characters/jun/knowledge.yaml",
+      "characters/raiden/knowledge.yaml",
+      "characters/ray/knowledge.yaml",
+      "characters/yuna/knowledge.yaml"
+    ],
+    "created_dynamic_state_files": [
+      "state/character_knowledge/akira.json",
+      "state/character_knowledge/emma.json",
+      "state/character_knowledge/irey.json",
+      "state/character_knowledge/jun.json",
+      "state/character_knowledge/miki.json",
+      "state/character_knowledge/raiden.json",
+      "state/character_knowledge/ray.json",
+      "state/character_knowledge/yuna.json"
+    ],
+    "global_knowledge_state": "state/knowledge_state.json is now an index, not a global per-character knowledge blob",
+    "runtime_policy": "required_files loads characters/<id>/knowledge.yaml for focus chars; dynamic state is compacted into knowledge_table for focus chars only; past.yaml loads only on explicit sensitive trigger",
+    "apply_turn_result": "visible_scene_text can be saved without existing turn_results file"
+  }
 }
