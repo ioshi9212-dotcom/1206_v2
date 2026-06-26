@@ -9,13 +9,14 @@ import app.response_size_guard_runtime_patch as size_guard  # noqa: F401
 import app.pov_switch_runtime_patch as pov_switch  # noqa: F401
 import app.state_persistence_runtime_patch as state_persistence  # noqa: F401
 import app.physical_continuity_runtime_patch as physical_continuity  # noqa: F401
+import app.character_entry_runtime_patch as character_entry  # noqa: F401
 
 try:
     import app.knowledge_state_runtime_patch as knowledge_state_runtime  # noqa: F401
 except Exception:
     knowledge_state_runtime = None  # type: ignore[assignment]
 
-app.version = "0.3.119-physical-continuity-v1"
+app.version = "0.3.120-character-entry-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -40,6 +41,7 @@ def _components() -> dict:
         "ProcessTurnResponse": _object_schema({"success": {"type": "boolean"}, "session_id": {"type": "string"}, "player_input": {"type": "string"}, "current_scene_id": {"type": "string"}, "status": {"type": "string"}, "scene_text": {"type": "string"}, "scene_packet": _object_schema()}),
         "ApplyTurnResultResponse": _object_schema({"status": {"type": "string"}, "session_id": {"type": "string"}, "changed_files": _array_string(), "visible_scene_text": {"type": "string"}, "final_scene_text": {"type": "string"}}),
         "PhysicalContinuityRepairResponse": _object_schema({"status": {"type": "string"}, "session_id": {"type": "string"}, "changed_files": _array_string(), "reason": {"type": "string"}, "physical_continuity_state": _object_schema()}),
+        "CharacterEntryRepairResponse": _object_schema({"status": {"type": "string"}, "session_id": {"type": "string"}, "changed_files": _array_string(), "reason": {"type": "string"}, "pending": _object_schema(), "current_state_pending_character_ids": _array_string()}),
     }
 
 
@@ -73,7 +75,7 @@ def _openapi() -> dict[str, Any]:
             "/health": {"get": {"operationId": "health", "summary": "Check API health and runtime version", "responses": {"200": _response("API health status", "HealthResponse")}}},
             "/api/v1/sessions": {"post": {"operationId": "createSession", "summary": "Create a new gameplay session", "requestBody": {"required": False, "content": {"application/json": {"schema": _object_schema({"session_id": {"type": "string"}, "title": {"type": "string"}, "reset": {"type": "boolean"}})}}}, "responses": {"200": _response("Created session", "SessionResponse")}}},
             "/api/v1/sessions/{session_id}/context": {"get": {"operationId": "getSessionContext", "summary": "Get compact session context", "parameters": [_session_path_param()], "responses": {"200": _response("Compact session context", "SizeGuardContextResponse")}}},
-            "/api/v1/sessions/{session_id}/turn-contract": {"get": {"operationId": "getSessionTurnContract", "summary": "Get compact turn contract; self-heals stale physical continuity from latest scene_history when needed", "parameters": [_session_path_param()], "responses": {"200": _response("Turn contract", "TurnContractWithPromptPreview")}}},
+            "/api/v1/sessions/{session_id}/turn-contract": {"get": {"operationId": "getSessionTurnContract", "summary": "Get compact turn contract; self-heals stale physical continuity and hidden character-entry continuity when needed", "parameters": [_session_path_param()], "responses": {"200": _response("Turn contract", "TurnContractWithPromptPreview")}}},
             "/api/v1/sessions/{session_id}/required-files-manifest": {"get": {"operationId": "getRequiredFilesManifest", "summary": "Get required files manifest and chunk count", "parameters": [_session_path_param()], "responses": {"200": _response("Required files manifest", "RequiredFilesManifestResponse")}}},
             "/api/v1/sessions/{session_id}/required-files-chunk": {"get": {"operationId": "getRequiredFilesChunk", "summary": "Get one chunk of required file contents", "parameters": [_session_path_param()] + _chunk_params(), "responses": {"200": _response("Required files chunk", "RequiredFilesChunkResponse")}}},
             "/api/v1/sessions/{session_id}/required-files-bundle": {"get": {"operationId": "getRequiredFilesBundle", "summary": "Backward-compatible required files chunk endpoint", "parameters": [_session_path_param()] + _chunk_params(), "responses": {"200": _response("Required files chunk", "RequiredFilesChunkResponse")}}},
@@ -81,6 +83,7 @@ def _openapi() -> dict[str, Any]:
             "/api/v1/sessions/{session_id}/turn": {"post": {"operationId": "processTurn", "summary": "Return gameplay scene", "parameters": [_session_path_param()], "requestBody": {"required": True, "content": {"application/json": {"schema": _object_schema({"player_input": {"type": "string"}, "mode": {"type": "string", "default": "play"}, "include_file_contents": {"type": "boolean", "default": True}, "state_patches": _object_schema()}, required=["player_input"])}}}, "responses": {"200": _response("Processed turn", "ProcessTurnResponse")}}},
             "/api/v1/sessions/{session_id}/apply-turn-result": {"post": {"operationId": "applyTurnResult", "summary": "Apply meaningful scene changes and fallback physical continuity from visible_scene_text", "parameters": [_session_path_param()], "requestBody": {"required": False, "content": {"application/json": {"schema": _object_schema({"turn_file": {"type": "string"}, "data": _object_schema(), "dry_run": {"type": "boolean", "default": False}, "visible_scene_text": {"type": "string"}})}}}, "responses": {"200": _response("Apply result", "ApplyTurnResultResponse")}}},
             "/api/v1/sessions/{session_id}/repair/physical-continuity": {"post": {"operationId": "repairPhysicalContinuity", "summary": "Repair current_state/inventory_state from latest scene_history visible scene", "parameters": [_session_path_param(), {"name": "dry_run", "in": "query", "required": False, "schema": {"type": "boolean", "default": False}}, {"name": "force", "in": "query", "required": False, "schema": {"type": "boolean", "default": True}}], "responses": {"200": _response("Physical continuity repair result", "PhysicalContinuityRepairResponse")}}},
+            "/api/v1/sessions/{session_id}/repair/character-entry": {"post": {"operationId": "repairCharacterEntry", "summary": "Repair hidden pending character-entry state, especially Raiden's late-night conditional entry", "parameters": [_session_path_param(), {"name": "force", "in": "query", "required": False, "schema": {"type": "boolean", "default": True}}, {"name": "dry_run", "in": "query", "required": False, "schema": {"type": "boolean", "default": False}}], "responses": {"200": _response("Character entry repair result", "CharacterEntryRepairResponse")}}},
         },
     }
 
@@ -101,4 +104,4 @@ def openapi_actions() -> dict[str, Any]:
 
 app.openapi_schema = None
 app.openapi = _openapi  # type: ignore[method-assign]
-app.version = "0.3.119-physical-continuity-v1"
+app.version = "0.3.120-character-entry-v1"
