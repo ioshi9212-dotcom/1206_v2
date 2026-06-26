@@ -18,25 +18,35 @@ Volume debug:
 
 ## Main operations
 
-- `healthCheck`
+- `healthCheck` / `health`
 - `debugVolume`
 - `createSession`
 - `processTurn`
-- `getTurnContract`
-- `getRequiredFilesManifest`
-- `getRequiredFilesChunk`
+- `getTurnContract` / `getSessionTurnContract`
+- `getFastRenderContext` ← основной быстрый режим для обычной игры
+- `getRequiredFilesManifest` ← полный fallback / диагностика
+- `getRequiredFilesChunk` ← полный fallback / диагностика, теперь с кэшем
 - `submitTurnResult`
 - `applyTurnResult`
 - `readProjectFile`
 
-## Recommended first test
+## Recommended fast test
 
-1. `healthCheck`
-2. `debugVolume`
-3. `createSession(session_id="main-1206-v2", reset=false)`
-4. `processTurn(session_id="main-1206-v2", player_input="начнем")`
-5. `getRequiredFilesManifest(session_id="main-1206-v2")`
-6. `getRequiredFilesChunk(session_id="main-1206-v2", chunk_index=0, max_chars=60000, max_items=6)`
+1. `health`
+2. `createSession(session_id="main-1206-v2", reset=false)`
+3. `getSessionTurnContract(session_id="main-1206-v2")`
+4. `getFastRenderContext(session_id="main-1206-v2", max_total_chars=45000, per_file_chars=8000)`
+5. Render scene.
+6. `applyTurnResult` after meaningful scene changes.
+
+## Full diagnostic test
+
+1. `health`
+2. `createSession(session_id="main-1206-v2", reset=false)`
+3. `getSessionTurnContract(session_id="main-1206-v2")`
+4. `getRequiredFilesManifest(session_id="main-1206-v2")`
+5. `getRequiredFilesChunk(session_id="main-1206-v2", chunk_index=0, max_chars=30000, max_items=3)`
+6. If `has_more=true`, call next chunks only for full audit mode. Normal gameplay should use `getFastRenderContext`.
 
 ## Volume expectations
 
