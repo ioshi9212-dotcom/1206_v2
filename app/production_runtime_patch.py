@@ -11,14 +11,32 @@ import app.state_persistence_runtime_patch as state_persistence  # noqa: F401
 import app.physical_continuity_runtime_patch as physical_continuity  # noqa: F401
 import app.character_entry_runtime_patch as character_entry  # noqa: F401
 import app.fast_context_runtime_patch as fast_context  # noqa: F401
-import app.npc_living_runtime_patch as npc_living  # noqa: F401
+
+# Optional patch from the previous NPC ZIP. Keep it here so this file does not
+# accidentally disable living NPC/session NPC support when applied after it.
+try:
+    import app.npc_living_runtime_patch as npc_living  # noqa: F401
+except Exception:
+    npc_living = None  # type: ignore[assignment]
+
+# East Sector location/base context and story rule locks. These are rule/context
+# patches, not gameplay logs.
+try:
+    import app.east_sector_context_runtime_patch as east_sector_context  # noqa: F401
+except Exception:
+    east_sector_context = None  # type: ignore[assignment]
+
+try:
+    import app.story_rules_context_runtime_patch as story_rules_context  # noqa: F401
+except Exception:
+    story_rules_context = None  # type: ignore[assignment]
 
 try:
     import app.knowledge_state_runtime_patch as knowledge_state_runtime  # noqa: F401
 except Exception:
     knowledge_state_runtime = None  # type: ignore[assignment]
 
-app.version = "0.3.122-living-npc-east-social-v1"
+app.version = "0.3.123-story-rules-character-locks-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -116,4 +134,4 @@ def openapi_actions() -> dict[str, Any]:
 
 app.openapi_schema = None
 app.openapi = _openapi  # type: ignore[method-assign]
-app.version = "0.3.122-living-npc-east-social-v1"
+app.version = "0.3.123-story-rules-character-locks-v1"
