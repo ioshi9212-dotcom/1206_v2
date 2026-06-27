@@ -1,4 +1,31 @@
 {
+  "schema": "session_npcs_v2_east_sector_social",
   "state_id": "session_npcs",
-  "npcs": {}
+  "purpose": "Живые NPC Восточного сектора и сессионная память для тех, кто стал заметным.",
+  "policy": {
+    "background_npcs": "Фоновые NPC могут говорить, двигаться, спорить, шутить, реагировать и взаимодействовать между собой, но не сохраняются, если не стали значимыми.",
+    "important_npcs": "Если NPC получает имя, повторное появление, личное отношение, роль, конфликт, слух, future hook или влияет на сцену — сохранить мини-анкету.",
+    "promotion_rule": "Если NPC становится канонно важным, позже перенести его в characters/<id>/; до этого хранить здесь.",
+    "variation_rule": "NPC не должны одинаково реагировать на Акиру, Райдена, Рэя, Мики, Хару, Юну или других."
+  },
+  "mini_profile_template": {
+    "id": "",
+    "name": "",
+    "role": "",
+    "age_range": "",
+    "first_seen_location": "",
+    "attitude_to_akira": "",
+    "attitude_to_raiden": "",
+    "relationships_or_group": [],
+    "voice": "",
+    "habit_or_visible_detail": "",
+    "goal_or_current_need": "",
+    "knows": [],
+    "does_not_know": [],
+    "rumors_heard": [],
+    "future_hook": ""
+  },
+  "important_npcs": {},
+  "open_npc_threads": [],
+  "recent_background_notes": []
 }
