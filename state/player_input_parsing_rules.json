@@ -1,31 +1,77 @@
 {
-  "schema": "player_input_parsing_rules_v14_akira_pov_inventory_guard",
-  "principle": "Parse player input as ordered sequence, not as a wish that rewrites the scene. Render the result through Akira's current perception and knowledge. Do not leak Akira inventory/state into NPC knowledge.",
+  "schema": "player_input_parsing_rules_v15_private_pov_parentheses",
+  "principle": "Parse player input as ordered sequence, not as a wish that rewrites the scene. Render the result through the current POV character's perception and knowledge. Do not leak POV thoughts, inventory, state or author layer into NPC knowledge.",
   "syntax": {
-    "outside_parentheses": "Akira's spoken line",
-    "inside_parentheses": "Akira's action, thought, pause, intention, body state, or observation",
+    "outside_parentheses": "exact spoken line of the current POV character",
+    "inside_parentheses": "private POV layer: action, thought, pause, intention, body state, observation or internal evaluation",
     "order_matters": true
   },
   "sequence_rule": [
     "If input starts with parentheses, resolve that action/thought/pause first.",
     "Then resolve any spoken line outside parentheses.",
     "Then resolve next parentheses/action/pause if present.",
-    "NPCs may act/speak during actions and pauses.",
+    "NPCs may act/speak during visible actions and pauses.",
     "Thoughts do not trigger external events by themselves."
   ],
+  "parentheses_visibility_lock": {
+    "core": "Text inside parentheses belongs only to the current POV character. It is not spoken aloud, not telepathic, not broadcast, and not automatically available to NPCs.",
+    "inside_parentheses_can_be": [
+      "action",
+      "thought",
+      "intention",
+      "pause",
+      "body state",
+      "observation",
+      "internal evaluation",
+      "private plan",
+      "private suspicion"
+    ],
+    "npc_can_react_only_to": [
+      "visible movement",
+      "facial expression",
+      "pause",
+      "silence",
+      "distance change",
+      "breathing",
+      "voice if spoken outside parentheses",
+      "object use",
+      "physical consequence",
+      "energy manifestation if actually visible/sensed"
+    ],
+    "npc_cannot_know_from_parentheses": [
+      "exact thought",
+      "hidden intention",
+      "private conclusion",
+      "internal suspicion",
+      "memory fragment",
+      "player explanation",
+      "author note",
+      "future plan unless acted out or spoken",
+      "unspoken question"
+    ],
+    "npc_inference_rule": "NPCs may infer from visible signs, but inference must be uncertain, partial, character-based, and can be wrong.",
+    "pov_switch_rule": "If POV is switched to Raiden/Ray/Irey/Haru/Jun/Yuna/Emma/Miki, parentheses belong to that POV character. Other characters still cannot read those thoughts.",
+    "hard_forbidden": [
+      "do_not_answer_unspoken_questions",
+      "do_not_make_npc_react_to_private_thought_as_if_heard",
+      "do_not_convert_parentheses_text_into_dialogue",
+      "do_not_make_every_npc_immediately_understand_akira",
+      "do_not_use_player_intention_as_npc_knowledge"
+    ]
+  },
   "pov_rule": {
-    "core": "Parentheses may include Akira's thoughts, but visible narration must not upgrade those thoughts into hidden facts or omniscient conclusions.",
+    "core": "Parentheses may include POV thoughts, but visible narration must not upgrade those thoughts into hidden facts, NPC knowledge or omniscient conclusions.",
     "can_show": [
-      "what Akira sees/hears/feels",
-      "what she suspects",
-      "what she has heard in scene",
+      "what POV character sees/hears/feels",
+      "what POV character suspects",
+      "what POV character has heard in scene",
       "dry internal evaluation and sarcasm"
     ],
     "cannot_show_as_fact": [
       "what an NPC understood internally",
       "why an NPC reacted unless visible/known",
-      "terms Akira has not heard yet",
-      "that a stranger failed to call her by name when he has no reason to know it",
+      "terms POV character has not heard yet",
+      "that a stranger failed to call Akira by name when she has no reason to expect him to know it",
       "hidden lore, erased memory, relationship truth, or correct labels from repo/card"
     ]
   },
@@ -53,7 +99,7 @@
   },
   "thought_rule": {
     "thought_is_not_world_command": true,
-    "description": "If Akira thinks about something, it does not mean the world must answer, reveal, arrive, or happen.",
+    "description": "If POV character thinks about something, it does not mean the world must answer, reveal, arrive, or happen.",
     "world_reacts_to": [
       "visible actions",
       "spoken lines",
@@ -65,7 +111,8 @@
     "world_does_not_react_to": [
       "unspoken thoughts as facts",
       "player wishes hidden inside thoughts",
-      "Akira imagining an outcome"
+      "POV character imagining an outcome",
+      "private questions inside parentheses"
     ]
   },
   "examples": {
@@ -73,11 +120,13 @@
     "sequence": [
       "Akira looks at Emma",
       "Akira has an internal thought/pause",
-      "NPC may react to the look/pause",
+      "NPC may react to the look/pause, not to the exact thought",
       "Akira says: Ты кто?"
     ],
     "pov_bad": "Ирэй понял, что Райден её не узнал.",
     "pov_good": "Ирэй слишком быстро посмотрел на Джуна. Что он понял — его проблема.",
+    "parentheses_bad": "(Акира подумала, что Джун врёт.) Джун понял, что она догадалась.",
+    "parentheses_good": "(Акира подумала, что Джун врёт.) Джун заметил только паузу и слишком ровный взгляд.",
     "inventory_bad": "Эмма говорит 'ножницы', хотя видела только деформацию ткани.",
     "inventory_good": "Эмма говорит 'то, что у тебя за поясом'."
   },
@@ -88,6 +137,7 @@
     "do_not_freeze_npcs_during_parentheses",
     "do_not_write_omniscient_narrator_conclusions",
     "do_not_use_unknown_terms_in_akira_pov",
-    "do_not_leak_hidden_inventory_exact_names_to_npc_dialogue"
+    "do_not_leak_hidden_inventory_exact_names_to_npc_dialogue",
+    "do_not_make_npc_answer_private_parentheses_question"
   ]
 }
