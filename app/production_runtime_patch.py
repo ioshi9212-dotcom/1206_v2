@@ -11,13 +11,14 @@ import app.state_persistence_runtime_patch as state_persistence  # noqa: F401
 import app.physical_continuity_runtime_patch as physical_continuity  # noqa: F401
 import app.character_entry_runtime_patch as character_entry  # noqa: F401
 import app.fast_context_runtime_patch as fast_context  # noqa: F401
+import app.npc_living_runtime_patch as npc_living  # noqa: F401
 
 try:
     import app.knowledge_state_runtime_patch as knowledge_state_runtime  # noqa: F401
 except Exception:
     knowledge_state_runtime = None  # type: ignore[assignment]
 
-app.version = "0.3.121-fast-context-cache-v1"
+app.version = "0.3.122-living-npc-east-social-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -115,4 +116,4 @@ def openapi_actions() -> dict[str, Any]:
 
 app.openapi_schema = None
 app.openapi = _openapi  # type: ignore[method-assign]
-app.version = "0.3.121-fast-context-cache-v1"
+app.version = "0.3.122-living-npc-east-social-v1"
