@@ -36,7 +36,7 @@ try:
 except Exception:
     knowledge_state_runtime = None  # type: ignore[assignment]
 
-app.version = "0.3.123-story-rules-character-locks-v1"
+app.version = "0.3.125-pov-npc-goal-east-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -134,4 +134,4 @@ def openapi_actions() -> dict[str, Any]:
 
 app.openapi_schema = None
 app.openapi = _openapi  # type: ignore[method-assign]
-app.version = "0.3.123-story-rules-character-locks-v1"
+app.version = "0.3.125-pov-npc-goal-east-v1"

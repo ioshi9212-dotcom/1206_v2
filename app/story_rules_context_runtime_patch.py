@@ -146,8 +146,12 @@ def _small_output_contract_with_story_rules() -> dict[str, Any]:
         "NPCs cannot hear, read, or answer thoughts, private intentions, author notes, or hidden conclusions inside parentheses.",
         "NPCs may react only to visible signs: movement, pause, silence, gaze, posture, breathing, object use, energy manifestation, injury, distance.",
         "NPC inference from visible behavior must be partial, uncertain, character-based, and can be wrong.",
+        "Private sensory/energy/empathy/medical ability results are not visible narration facts in Akira POV unless spoken, shown by device, or already revealed.",
+        "NPC goals are motives, not instant commands: preserve questions, suspicion, mistakes, hesitation, lies, tactics and character voice before action.",
+        "All NPCs have the same knowledge boundary: hidden object content, purpose, route or document meaning is not known from pocket/inventory/state alone.",
         "Akira must discover major truth through action, evidence, documents, contradictions, scenes and consequences; NPCs are not lore-delivery tools.",
         "Character presence follows relationship, goals, habitual routes, current location, calendar pressure and open threads; characters are not glued to Akira but do not disappear from the world.",
+        "East Sector is a living base, not Northern/lab protocol speech; everyday NPC language should stay human unless an official/closed context requires formality.",
         "If Akira arrived at East Sector before/during dawn on 31 Aug and sleeps, she wakes later on 31 Aug unless an explicit night timeskip moves the date.",
     ])
     contract["rules"] = _unique(rules)
@@ -165,9 +169,13 @@ def _small_prompt_preview_with_story_rules(chars: list[str], required_files: lis
     extra = (
         "\nSTORY RULE LOCKS\n"
         "- Parentheses are private POV/action layer; NPCs do not read thoughts.\n"
+        "- NPC private ability results are not visible facts in Akira POV unless revealed in-scene.\n"
+        "- NPC goals are motives, not autopilot; preserve questions, uncertainty and character tactics.\n"
+        "- All NPCs know only visible/heard/valid-known facts; concealed content is not readable from inventory/state.\n"
         "- Truth is discovered by Akira through evidence and scenes, not dumped by Jun/Ray/Yuna/others.\n"
         "- Character entry depends on relationship, goals, ordinary routes and social context.\n"
         "- East Sector base context and locations must be used when the scene is at/near the base.\n"
+        "- East Sector everyday speech is human, not Northern/lab protocol tone.\n"
         "- 31 Aug sleep after base arrival does not automatically become 1 Sep.\n"
     )
     return text + extra
@@ -194,4 +202,4 @@ if fast_context is not None:
     except Exception:
         pass
 
-app.version = "0.3.123-story-rules-character-locks-v1"
+app.version = "0.3.125-pov-npc-goal-east-v1"

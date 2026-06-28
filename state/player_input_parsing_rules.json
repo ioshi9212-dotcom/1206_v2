@@ -1,5 +1,5 @@
 {
-  "schema": "player_input_parsing_rules_v15_private_pov_parentheses",
+  "schema": "player_input_parsing_rules_v16_all_npc_visibility",
   "principle": "Parse player input as ordered sequence, not as a wish that rewrites the scene. Render the result through the current POV character's perception and knowledge. Do not leak POV thoughts, inventory, state or author layer into NPC knowledge.",
   "syntax": {
     "outside_parentheses": "exact spoken line of the current POV character",
@@ -47,7 +47,9 @@
       "player explanation",
       "author note",
       "future plan unless acted out or spoken",
-      "unspoken question"
+      "unspoken question",
+      "private sensory result of another NPC",
+      "exact content or purpose of a concealed item"
     ],
     "npc_inference_rule": "NPCs may infer from visible signs, but inference must be uncertain, partial, character-based, and can be wrong.",
     "pov_switch_rule": "If POV is switched to Raiden/Ray/Irey/Haru/Jun/Yuna/Emma/Miki, parentheses belong to that POV character. Other characters still cannot read those thoughts.",
@@ -56,7 +58,9 @@
       "do_not_make_npc_react_to_private_thought_as_if_heard",
       "do_not_convert_parentheses_text_into_dialogue",
       "do_not_make_every_npc_immediately_understand_akira",
-      "do_not_use_player_intention_as_npc_knowledge"
+      "do_not_use_player_intention_as_npc_knowledge",
+      "do_not_treat_concealed_item_as_readable",
+      "do_not_make_npc_know_hidden_content_or_route_without_source"
     ]
   },
   "pov_rule": {
@@ -72,7 +76,9 @@
       "why an NPC reacted unless visible/known",
       "terms POV character has not heard yet",
       "that a stranger failed to call Akira by name when she has no reason to expect him to know it",
-      "hidden lore, erased memory, relationship truth, or correct labels from repo/card"
+      "hidden lore, erased memory, relationship truth, or correct labels from repo/card",
+      "private sensory result of an NPC ability unless current POV has a source",
+      "hidden content or purpose of a concealed item"
     ]
   },
   "concealed_inventory_rule": {
@@ -95,7 +101,9 @@
       "руку от пояса"
     ],
     "forbidden_example": "Эмма: Без ножниц — when scissors are hidden and unseen.",
-    "allowed_example": "Эмма: Без того, что ты спрятала за поясом."
+    "allowed_example": "Эмма: Без того, что ты спрятала за поясом.",
+    "hidden_content_rule": "Concealed objects do not reveal content, route, address, purpose, document meaning or exact identity. NPCs may react only to visible signs, spoken information, direct use, prior knowledge, or an explicit perception ability used in the scene.",
+    "applies_to_all_npcs": true
   },
   "thought_rule": {
     "thought_is_not_world_command": true,
@@ -138,6 +146,17 @@
     "do_not_write_omniscient_narrator_conclusions",
     "do_not_use_unknown_terms_in_akira_pov",
     "do_not_leak_hidden_inventory_exact_names_to_npc_dialogue",
-    "do_not_make_npc_answer_private_parentheses_question"
-  ]
+    "do_not_make_npc_answer_private_parentheses_question",
+    "do_not_reveal_npc_private_sensory_result_in_wrong_pov",
+    "do_not_make_concealed_content_visible_to_npc_without_source"
+  ],
+  "all_npc_visibility_rule": {
+    "core": "NPCs follow the same perception boundary as Akira: they see only what is visible, hear only what is spoken, know only what their valid knowledge/state gives them, and infer only within evidence.",
+    "forbidden": [
+      "do not upgrade hidden state into NPC knowledge",
+      "do not make an NPC know the content or purpose of a concealed object",
+      "do not make an NPC know private thoughts or route intent",
+      "do not make an ordinary NPC act like a scanner"
+    ]
+  }
 }
