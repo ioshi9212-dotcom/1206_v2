@@ -171,10 +171,11 @@ def character_files_for(character_id: str) -> list[str]:
 
     folder = NEW_CHARACTER_FOLDERS.get(cid)
     if folder:
+        # Core scene files only. past.yaml is hidden/conditional and should not be pulled by default.
         for rel in (
             f"characters/{folder}/main.yaml",
             f"characters/{folder}/character.yaml",
-            f"characters/{folder}/past.yaml",
+            f"characters/{folder}/knowledge.yaml",
         ):
             if base.repo_file_exists(rel):
                 files.append(rel)
@@ -277,7 +278,7 @@ def output_format_contract() -> dict:
         "Everything the player writes outside parentheses must appear verbatim as Akira's spoken line; never replace it with a recap.",
         "Everything inside parentheses is action/pause/body state/intention, not speech.",
         "If the player waits for registration/check/scanner, do not auto-complete the procedure; stop before the player-facing action.",
-        "If the current player input contains no spoken text outside parentheses, do not create new Akira dialogue lines in the scene body; put possible Akira lines only in the bottom block.",
+        "If the current player input contains no spoken text outside parentheses, do not create consequential Akira dialogue; low-stakes micro-answers may be brief if they change no route, truth, trust, conflict, safety, access or relationship state.",
         "In gameplay mode, show the full visible scene before applying state; after apply-turn-result, the final visible answer must still be the gameplay scene, not status/summary.",
         "If apply-turn-result was called before a visible scene was shown, output a repair-render of that saved event without applying state again.",
         "Before calling apply-turn-result in gameplay mode, assemble complete visible_scene_text and pass it into apply-turn-result.",
@@ -369,7 +370,7 @@ def session_turn_contract_with_prompt_preview(session_id: str) -> TurnContractWi
     checks = list(data.get("required_checks_before_answer", []) or [])
     for check in [
         "After getSessionTurnContract and before any gameplay scene, call getRequiredFilesManifest and then getRequiredFilesChunk for every chunk until has_more=false.",
-        "Do not render a gameplay scene from only main.yaml files when required_files includes character.yaml, past.yaml, locks or state files; load all required-file chunks first.",
+        "Do not render a gameplay scene from only main.yaml files when required_files includes character.yaml, knowledge.yaml, conditional past.yaml, locks or state files; load all required-file chunks first.",
         "Follow prompt_preview as the render brief for this turn.",
         "In play mode, never show session/status/API/context summary; output only the scene.",
         "Do not ask permission to render/start/continue after the user has given a play command.",

@@ -3,7 +3,8 @@
 Keeps the Academy-style structure:
 characters/<id>/main.yaml
 characters/<id>/character.yaml
-characters/<id>/past.yaml
+characters/<id>/knowledge.yaml
+characters/<id>/past.yaml only by trigger
 
 This patch does not replace compact_context_patch. It updates its registry and
 start-scene character file refs after the normal runtime is imported.
@@ -63,10 +64,11 @@ def _character_files(cid: str) -> list[str]:
     folder = CHARACTER_FOLDER_ALIASES.get(str(cid).strip())
     if not folder:
         return []
+    # Core scene files only. Hidden/past context is loaded by explicit scene/calendar triggers.
     return [
         f"characters/{folder}/main.yaml",
         f"characters/{folder}/character.yaml",
-        f"characters/{folder}/past.yaml",
+        f"characters/{folder}/knowledge.yaml",
     ]
 
 

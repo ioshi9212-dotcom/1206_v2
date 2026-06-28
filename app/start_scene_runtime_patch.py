@@ -46,26 +46,26 @@ START_CHARACTER_IDS = ["akira", "jun", "irey", "emma"]
 CONDITIONAL_CHARACTER_IDS = ["raiden", "ray"]
 
 START_CHARACTER_FILES: dict[str, list[str]] = {
+    # Core files only. Hidden/past context is added by explicit scene/calendar triggers.
     "akira": [
-        "characters/akira/akira_main_profile.yaml",
-        "characters/akira/akira_knowledge_connections.yaml",
-        "characters/akira/akira_hidden_past.yaml",
-        "characters/akira/akira_thought_triggers.yaml",
+        "characters/akira/main.yaml",
+        "characters/akira/character.yaml",
+        "characters/akira/knowledge.yaml",
     ],
     "jun": [
-        "characters/jun/jun_main_profile.yaml",
-        "characters/jun/jun_knowledge_connections.yaml",
-        "characters/jun/jun_hidden_past.yaml",
+        "characters/jun/main.yaml",
+        "characters/jun/character.yaml",
+        "characters/jun/knowledge.yaml",
     ],
     "irey": [
-        "characters/irey/irey_main_profile.yaml",
-        "characters/irey/irey_knowledge_connections.yaml",
-        "characters/irey/irey_hidden_past.yaml",
+        "characters/irey/main.yaml",
+        "characters/irey/character.yaml",
+        "characters/irey/knowledge.yaml",
     ],
     "emma": [
-        "characters/emma/emma_main_profile.yaml",
-        "characters/emma/emma_knowledge_connections.yaml",
-        "characters/emma/emma_hidden_past.yaml",
+        "characters/emma/main.yaml",
+        "characters/emma/character.yaml",
+        "characters/emma/knowledge.yaml",
     ],
 }
 

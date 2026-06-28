@@ -232,14 +232,46 @@ def scene_character_ids(current: dict[str, Any] | None = None, future: dict[str,
     return _unique(ids)
 
 
-def character_files_for_context(cid: str, *, include_past: bool = True) -> list[str]:
+PAST_CONTEXT_TRIGGERS = {
+    "past", "hidden", "memory", "samuel", "ring", "scar", "laboratory",
+    "echo", "kairos", "child", "pregnancy", "akira_raiden", "self_block",
+    "прошл", "памят", "самуэль", "кольц", "шрам", "лаборатор",
+    "эхо", "кайрос", "реб", "беремен", "самоблок",
+}
+
+
+def _context_needs_past(current: dict[str, Any] | None = None, future: dict[str, Any] | None = None) -> bool:
+    current = current or {}
+    future = future or {}
+    explicit = current.get("include_past_context") or current.get("load_past_context") or future.get("include_past_context")
+    if explicit is not None:
+        return bool(explicit)
+    haystack = json.dumps(
+        {
+            "scene_focus": current.get("scene_focus"),
+            "current_scene_goal": current.get("current_scene_goal"),
+            "open_threads": current.get("open_threads"),
+            "focus_tags": current.get("focus_tags"),
+            "calendar_triggers": current.get("calendar_triggers"),
+            "locks": future.get("locks"),
+        },
+        ensure_ascii=False,
+        default=str,
+    ).lower()
+    return any(trigger in haystack for trigger in PAST_CONTEXT_TRIGGERS)
+
+
+def character_files_for_context(cid: str, *, include_past: bool = False) -> list[str]:
     folder = known_character_folder(cid)
     if not folder:
         return []
-    candidates = [f"characters/{folder}/character.yaml"]
+    candidates = [
+        f"characters/{folder}/main.yaml",
+        f"characters/{folder}/character.yaml",
+        f"characters/{folder}/knowledge.yaml",
+    ]
     if include_past:
         candidates.append(f"characters/{folder}/past.yaml")
-    candidates.append(f"characters/{folder}/main.yaml")
     return [path for path in candidates if base.repo_file_exists(path)]
 
 
@@ -257,7 +289,7 @@ def lean_recommended_files_for_context(current: dict[str, Any] | None = None, fu
         files.append("characters/character_id_index.md")
 
     for cid in chars:
-        files.extend(character_files_for_context(cid, include_past=True))
+        files.extend(character_files_for_context(cid, include_past=_context_needs_past(current, future)))
 
     return _unique(files)
 

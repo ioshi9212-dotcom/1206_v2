@@ -31,10 +31,10 @@ active_characters:
     active_from: "00:00"
     active_until: null
     files:
-      main: "characters/akira/akira_main_profile.yaml"
-      knowledge: "characters/akira/akira_knowledge_connections.yaml"
-      hidden: "characters/akira/akira_hidden_past.yaml"
-      thought_triggers: "characters/akira/akira_thought_triggers.yaml"
+      main: "characters/akira/main.yaml"
+      character: "characters/akira/character.yaml"
+      knowledge: "characters/akira/knowledge.yaml"
+      past: "characters/akira/past.yaml" # conditional only / только по триггеру
     scene_goal: ""
     visible_goal: ""
     hidden_goal: ""
@@ -51,8 +51,9 @@ nearby_or_conditional_characters:
     condition: ""
     files:
       main: ""
+      character: ""
       knowledge: ""
-      hidden: ""
+      past: "" # conditional only / только по триггеру
     scene_goal: ""
     visible_goal: ""
     hidden_goal: ""
@@ -64,6 +65,8 @@ scene_rules:
   - "Не прибивать будущие сцены к прошлой локации; после смены места шапка берёт current_location_text/current_location_id из state."
   - "Не раскрывать hidden lore автоматически."
   - "Перед репликой NPC проверять его knowledge-файл и текущий источник знания."
+  - "past.yaml персонажа грузить только по явному триггеру прошлого/памяти/скрытого лора."
+  - "Не использовать старые *_main_profile.yaml, *_hidden_past.yaml, *_knowledge_connections.yaml в календаре."
 
 time_flow:
   start_time: "00:00"
