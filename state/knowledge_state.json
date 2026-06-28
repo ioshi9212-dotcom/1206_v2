@@ -11,7 +11,11 @@
     "Для персонажа в сцене подтягивать state/character_knowledge/<id>.json как динамическую память сцены.",
     "Если персонаж не в сцене и не в фокусе, его dynamic knowledge state не подтягивать.",
     "Новые факты, увиденное, услышанное, важные реплики Акиры и выводы писать только в state/character_knowledge/<id>.json.",
-    "Карточки main.yaml/character.yaml/past.yaml не использовать как mutable state."
+    "Карточки main.yaml/character.yaml/past.yaml не использовать как mutable state.",
+    "Static knowledge describes what a character knows and disclosure level; it does not force the character to reveal it.",
+    "If a character does not know a fact, they may still guess, lie, test, question or pretend, but guesses are not facts until confirmed by a scene source.",
+    "Use engine/character_knowledge_runtime_rules.md as the interpretation contract for knowledge.yaml and state/character_knowledge files.",
+    "Do not mix knowledge between characters: Ray ignorance and Jun ignorance must remain separate until runtime updates change them."
   ],
   "characters": {
     "akira": {
@@ -54,5 +58,6 @@
       "static_file": "characters/miki/knowledge.yaml",
       "dynamic_file": "state/character_knowledge/miki.json"
     }
-  }
+  },
+  "rules_file": "engine/character_knowledge_runtime_rules.md"
 }
