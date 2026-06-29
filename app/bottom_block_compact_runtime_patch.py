@@ -1,7 +1,7 @@
-"""Bottom block compact runtime patch v4.
+"""Bottom block compact runtime patch v5.
 
-Keeps numeric state/relationship indicators, but prevents the visible bottom
-block from becoming a state dump, protocol report, or hidden-lore summary.
+Makes the visible lower interface small and prevents state/relationship dumps.
+This patch must be imported by app.production_runtime_patch.
 """
 from __future__ import annotations
 
@@ -23,13 +23,23 @@ def _append_unique_list(container, value: str) -> None:
         pass
 
 
+STRICT_BOTTOM_RULES = [
+    "Bottom block is a tiny interface panel, not a state dump, recap, protocol report, medical chart, inventory/clothing list, or offscreen tracker.",
+    "State block maximum: 3 compact lines total. If a detail does not change the next meaningful choice, compress it into one word or omit it.",
+    "Never write 'new facts' / 'новые факты' in the visible State block. Knowledge changes belong to state files, not UI text.",
+    "State line format: memory/emotions/flow; body stats/fatigue/injury count; combat/energy/risk. No long injury explanations, clothing notes, treatment history, NPC injuries, object ledgers, or location summaries.",
+    "Relationships block maximum: 4 entries and only characters currently present, addressed, or immediately affecting the current beat. No offscreen statuses, inventory notes, or injury logs.",
+    "Relationship entry format: Name: single signed number · 1-3 words. Do not explain what happened and do not describe logistics.",
+    "Before final output, delete bottom-block clauses after semicolons that recap events, report offscreen movement, explain medical details, or repeat the scene.",
+]
+
 if size_guard is not None:
     if hasattr(size_guard, "BASE_RULE_FILES"):
         _append_unique_list(size_guard.BASE_RULE_FILES, BOTTOM_BLOCK_RULES_FILE)
 
     _original_small_output_contract = getattr(size_guard, "_small_output_contract", None)
 
-    def _small_output_contract_bottom_block_v4():
+    def _small_output_contract_bottom_block_v5():
         if callable(_original_small_output_contract):
             contract = _original_small_output_contract()
         else:
@@ -37,38 +47,28 @@ if size_guard is not None:
         if not isinstance(contract, dict):
             contract = {"rules": []}
         rules = list(contract.get("rules") or [])
-        extra_rules = [
-            "Bottom block is a short interface panel, not a state dump, protocol report, recap, or hidden-lore summary.",
-            "State block must keep numeric stats when available, but only as 2-3 compact lines: memory/emotions/flow; strength/endurance/agility/fatigue; combat/energy/risk.",
-            "State block must not include 'new facts', protocol history, offscreen reports, clothing/inventory lists, long medical explanations, or scene recap.",
-            "Relationships block format: Name: single signed number · 2-3 words describing relationship type/status.",
-            "Relationships block must never use paired numbers like +12/-1 or +12 / -1.",
-            "Relationships block must not explain what happened; it must describe current relation quality only.",
-        ]
-        for rule in extra_rules:
+        for rule in STRICT_BOTTOM_RULES:
             if rule not in rules:
                 rules.append(rule)
         contract["rules"] = rules
-        contract["bottom_block_compact_v4"] = {
-            "state_format": [
+        contract["bottom_block_compact_v5"] = {
+            "state_max_lines": 3,
+            "state_example": [
                 "Память: 8% · эмоции: блок · поток: закрыт",
-                "Сила: 34 · выносливость: 38 · ловкость: 46 · усталость: 12",
-                "Бой: 55/85 · энергия: 0/1 · риск: высокий",
+                "Тело: сила 22 · вын 17 · ловк 37 · усталость 86 · травмы 1",
+                "Бой: 47/85 · энергия: 0 · риск: низко-средний",
             ],
-            "relationship_format": "Имя: +12 · контроль/забота",
-            "relationship_number_rule": "single signed number only; no +12/-1 pairs",
-            "forbidden_in_bottom_block": [
-                "новые факты",
-                "protocol recap",
-                "offscreen status report",
-                "long explanation of what happened",
-                "hidden lore",
-                "inventory/clothing dump unless immediately relevant",
+            "relationship_max_entries": 4,
+            "relationship_format": "Имя: +12 · 1-3 слова",
+            "forbidden_visible_bottom_terms": [
+                "новые факты", "new facts", "offscreen", "вне текущего контакта",
+                "идёт к периметру", "одежда заменена", "обезболивание запрещено",
+                "протокол", "подробное медицинское пояснение",
             ],
         }
         return contract
 
-    size_guard._small_output_contract = _small_output_contract_bottom_block_v4
+    size_guard._small_output_contract = _small_output_contract_bottom_block_v5
 
 try:
     import app.fast_context_runtime_patch as fast_context
@@ -83,6 +83,6 @@ if fast_context is not None and hasattr(fast_context, "FAST_ALWAYS_FILES"):
 
 try:
     if app is not None:
-        app.version = "0.3.124-bottom-block-compact-v4"
+        app.version = "0.3.134-npc-item-continuity-v1"
 except Exception:
     pass

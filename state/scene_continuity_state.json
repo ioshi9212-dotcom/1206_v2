@@ -1,0 +1,12 @@
+{
+  "schema": "scene_continuity_state_v1",
+  "purpose": "Hidden continuity for NPC physical state and scene objects. Not a visible header/lower-block source unless Akira currently sees it.",
+  "npc_physical_state": {},
+  "object_continuity": {},
+  "rules": [
+    "NPC injuries/limitations persist until recovery, treatment or explicit state update.",
+    "Object holder/location persists until visible action or explicit state update changes it.",
+    "Do not render hidden object holders in Akira header or bottom block."
+  ],
+  "last_updated": null
+}

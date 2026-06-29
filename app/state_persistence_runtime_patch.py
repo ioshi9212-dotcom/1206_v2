@@ -12,6 +12,7 @@ LAST_APPLY_RESULT_FILE = "state/last_apply_result.json"
 SCENE_HISTORY_FILE = "state/scene_history.json"
 CALENDAR_RUNTIME_FILE = "state/calendar_runtime.json"
 WORLD_INTEGRITY_STATE_FILE = "state/world_integrity_state.json"
+SCENE_CONTINUITY_STATE_FILE = "state/scene_continuity_state.json"
 REL_METRICS = list(getattr(base, "REL_METRICS", ["affection","trust","tension","jealousy","respect","curiosity","resentment"]))
 ID_ALIASES = {"livia_cross":"livia","haru_foster":"haru","raiden_sterling":"raiden","kir_knox":"kir","kiara_volt":"kiara","kael":"kael_north","north":"kael_north"}
 
@@ -170,6 +171,7 @@ def section_summary(payload):
         "inventory_changes":["inventory_changes","inventory_state_changes","inventory_state"],
         "future_locks_changes":["future_locks_changes","future_locks_progress_changes","future_locks_progress"],
         "calendar_runtime_changes":["calendar_runtime_changes","calendar_runtime","calendar_changes"],
+        "scene_continuity_changes":["scene_continuity_changes","scene_continuity_state","npc_physical_changes","object_continuity_changes"],
     }.items()}
 
 
@@ -204,7 +206,10 @@ def apply_turn_result_persistent(session_id: str, request: ccp.ApplyTurnResultWi
     source, payload = _payload_from_request_or_turn_file(sid, request)
     changed = []
     if apply_relationship_changes_robust(sid, payload, request.dry_run): changed.append("state/relationships.json")
-    for path, names in list(base.STATE_SECTION_MAP) + [(CALENDAR_RUNTIME_FILE, ["calendar_runtime_changes","calendar_runtime","calendar_changes"])]:
+    for path, names in list(base.STATE_SECTION_MAP) + [
+        (CALENDAR_RUNTIME_FILE, ["calendar_runtime_changes", "calendar_runtime", "calendar_changes"]),
+        (SCENE_CONTINUITY_STATE_FILE, ["scene_continuity_changes", "scene_continuity_state", "npc_physical_changes", "object_continuity_changes"]),
+    ]:
         if apply_json_section_robust(sid, payload, path, names, request.dry_run):
             if path == "state/knowledge_state.json":
                 changed.extend(getattr(base, "LAST_KNOWLEDGE_CHANGED_FILES", []) or [path])

@@ -6,6 +6,7 @@ import app.start_scene_runtime_patch as start_runtime
 from app.start_scene_runtime_patch import app
 import app.character_registry_runtime_patch as character_registry  # noqa: F401
 import app.response_size_guard_runtime_patch as size_guard  # noqa: F401
+import app.bottom_block_compact_runtime_patch as bottom_block_compact  # noqa: F401
 import app.pov_switch_runtime_patch as pov_switch  # noqa: F401
 import app.state_persistence_runtime_patch as state_persistence  # noqa: F401
 import app.physical_continuity_runtime_patch as physical_continuity  # noqa: F401
@@ -36,18 +37,7 @@ try:
 except Exception:
     knowledge_state_runtime = None  # type: ignore[assignment]
 
-# Calendar structure, current-day loading, time/skip/sleep rules.
-try:
-    import app.calendar_context_runtime_patch as calendar_context_runtime  # noqa: F401
-except Exception:
-    calendar_context_runtime = None  # type: ignore[assignment]
-
-try:
-    import app.calendar_scene_runtime_patch as calendar_scene_runtime  # noqa: F401
-except Exception:
-    calendar_scene_runtime = None  # type: ignore[assignment]
-
-app.version = "0.3.131-calendar-clean-story-rules-v1"
+app.version = "0.3.134-npc-item-continuity-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -145,4 +135,4 @@ def openapi_actions() -> dict[str, Any]:
 
 app.openapi_schema = None
 app.openapi = _openapi  # type: ignore[method-assign]
-app.version = "0.3.131-calendar-clean-story-rules-v1"
+app.version = "0.3.134-npc-item-continuity-v1"
