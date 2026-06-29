@@ -4,6 +4,9 @@ This patch prevents full past.yaml/hidden past files from being used as visible
 prose material during ordinary gameplay. Past files can still be consulted during
 technical/audit checks, but normal scene rendering must rely on current state,
 character main/character/knowledge cards, scene continuity and visible POV.
+
+Lightweight memory fragment files are allowed: they are not full past and only
+provide short sensory/body triggers plus reaction rules.
 """
 from __future__ import annotations
 
@@ -14,6 +17,41 @@ import app.roster_identity_context_guard_runtime_patch as roster_guard
 from app import compact as base
 
 app = base.app
+
+MEMORY_FRAGMENT_FILES = [
+    "canon/relationships/akira_raiden_memory_fragments.yaml",
+]
+
+MEMORY_FRAGMENT_TRIGGER_WORDS = (
+    "кольц",
+    "ar",
+    "гравиров",
+    "помолв",
+    "предложен",
+    "безымян",
+    "кира",
+    "райден",
+    "стэрлинг",
+    "стерлинг",
+    "стёрлинг",
+    "запясть",
+    "пальц",
+    "косну",
+    "контакт",
+    "холод",
+    "иней",
+    "дыхан",
+    "море",
+    "обрыв",
+    "край",
+    "окно",
+    "баскетбол",
+    "корт",
+    "мяч",
+    "не помню",
+    "забыл",
+    "прошл",
+)
 
 TECHNICAL_AUDIT_WORDS = (
     "техническ",
@@ -61,6 +99,10 @@ def _current_text(current: dict[str, Any]) -> str:
         value = current.get(key)
         if value:
             parts.append(str(value))
+    for field in getattr(roster_guard.context_transport, "CHARACTER_FIELDS", []):
+        value = current.get(field)
+        if isinstance(value, list):
+            parts.append(" ".join(str(x) for x in value))
     return "\n".join(parts)
 
 
@@ -71,6 +113,13 @@ def is_technical_audit_context(current: dict[str, Any], include_past: bool | Non
     # include_past=true alone is not enough: old clients/GPT may set it whenever
     # a ring, memory or scar appears, which turns hidden history into visible prose.
     return False
+
+
+def should_load_memory_fragments(current: dict[str, Any], ids: list[str]) -> bool:
+    if not ({"akira", "raiden"} <= set(ids)):
+        return False
+    text = _norm(_current_text(current))
+    return any(word in text for word in MEMORY_FRAGMENT_TRIGGER_WORDS)
 
 
 def gameplay_needs_private_past(current: dict[str, Any], include_past: bool | None = None) -> bool:
@@ -117,6 +166,10 @@ def recommended_files_for_context(current: dict[str, Any] | None = None, future:
         "gpt/scene_format.md",
         "characters/character_id_index.md",
     ]
+
+    if should_load_memory_fragments(current, ids):
+        files.extend(MEMORY_FRAGMENT_FILES)
+
     include_past = is_technical_audit_context(current)
     for cid in ids:
         files.extend(character_files_for_context(cid, include_past=include_past))
@@ -143,4 +196,4 @@ fast_context._required_files_for_session = required_files_for_session_guard  # t
 fast_context._needs_past = gameplay_needs_private_past  # type: ignore[assignment]
 base.recommended_files_for_context = recommended_files_for_context
 
-app.version = "0.3.139-past-visibility-guard-v1"
+app.version = "0.3.140-memory-fragments-v1"
