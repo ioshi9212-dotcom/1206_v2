@@ -1,0 +1,26 @@
+energy_runtime_digest:
+  version: energy_runtime_digest_v1
+  rule: "Energy is an active world layer. Humans/kairos with energy are not rendered as ordinary physical-only people when their energy packet is loaded."
+  gameplay_use:
+    - "Energy can affect combat, movement, pressure, defense, perception, restraint, pursuit and escape."
+    - "Characters do not use energy every second, but it must remain an available behavior option when danger, pursuit, defense or control logically calls for it."
+    - "Do not invent new powers: use only character packets and loaded canon/state."
+  known_profiles:
+    akira:
+      energy: "space"
+      current_1206_rule: "access is closed/blocked unless scene/context unlocks it"
+    emma:
+      energy: "water/moisture/liquid pressure"
+      operational_use: "pressure, restraint, compression, environment moisture manipulation"
+      limits: "needs moisture/source/medium/concentration; dry cold/wind/spatial disturbance can interfere"
+    irey:
+      energy: "space + spatial-sensory link"
+      operational_use: "space control, movement/positioning, sensory anchor by intentional touch"
+      limits: "not mind-reading; quality depends on distance and time after anchor"
+    raiden:
+      energy: "cold + air"
+      operational_use: "cold leak, air pressure/cuts/defense, reflexive environmental effect under threat"
+      limits: "does not restore erased memory by itself"
+  renderer_rule:
+    - "If active/nearby character has an energy section, consider it in scene reaction."
+    - "If an energy-capable character's energy section is missing from the packet, stop gameplay and report incomplete context."
