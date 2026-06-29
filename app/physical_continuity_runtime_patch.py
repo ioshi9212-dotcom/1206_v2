@@ -37,6 +37,7 @@ LAST_APPLY_RESULT_FILE = persistence.LAST_APPLY_RESULT_FILE
 SCENE_HISTORY_FILE = persistence.SCENE_HISTORY_FILE
 CALENDAR_RUNTIME_FILE = persistence.CALENDAR_RUNTIME_FILE
 WORLD_INTEGRITY_STATE_FILE = persistence.WORLD_INTEGRITY_STATE_FILE
+SCENE_CONTINUITY_STATE_FILE = "state/scene_continuity_state.json"
 
 
 class PhysicalContinuityRepairResponse(BaseModel):
@@ -144,6 +145,10 @@ def _items_from_raw(raw: str) -> list[str]:
     if not raw:
         return []
     text = raw
+    lowered_raw = str(text).lower().replace("ё", "е")
+    # Rule/template placeholders are not physical objects.
+    if "current_state" in lowered_raw or "из state" in lowered_raw or "из текущего state" in lowered_raw:
+        return []
     for prefix in ("рядом:", "рядом", "при себе:", "при себе", "на столе"):
         if text.lower().replace("ё", "е").startswith(prefix):
             text = text[len(prefix):].strip(" :—-;,")
@@ -304,10 +309,12 @@ def _sync_current_and_inventory(session_id: str, physical: dict[str, Any], *, dr
             current["current_day_phase"] = physical.get("current_day_phase") or physical["time_of_day"]
         if physical.get("current_outfit"):
             current["current_outfit"] = physical["current_outfit"]
-        if physical.get("visible_inventory"):
-            current["visible_inventory"] = _merge_unique(current.get("visible_inventory", []), list(physical["visible_inventory"]))
-        if physical.get("nearby_items"):
-            current["nearby_items"] = _merge_unique(current.get("nearby_items", []), list(physical["nearby_items"]))
+        # visible_inventory/nearby_items are a current visible slice, not an append-only history.
+        # Hidden or transferred objects must stay in inventory_state / scene_continuity_state, not in the header.
+        if "visible_inventory_raw" in physical or "visible_inventory" in physical:
+            current["visible_inventory"] = list(physical.get("visible_inventory") or [])
+        if "nearby_items_raw" in physical or "nearby_items" in physical:
+            current["nearby_items"] = list(physical.get("nearby_items") or [])
         if physical.get("active_characters") and not current.get("active_characters"):
             current["active_characters"] = physical["active_characters"]
         if physical.get("nearby_characters") and not current.get("nearby_characters"):
@@ -350,9 +357,9 @@ def _sync_current_and_inventory(session_id: str, physical: dict[str, Any], *, dr
     if not isinstance(akira_inv, dict):
         akira_inv = {}
         inventory["akira"] = akira_inv
-    visible_items = list(current.get("visible_inventory") or physical.get("visible_inventory") or [])
-    if visible_items:
-        akira_inv["visible_inventory"] = _merge_unique(akira_inv.get("visible_inventory", []), [str(x) for x in visible_items])
+    visible_items = list(physical.get("visible_inventory") or current.get("visible_inventory") or [])
+    if "visible_inventory_raw" in physical or "visible_inventory" in physical:
+        akira_inv["visible_inventory"] = [str(x) for x in visible_items]
         akira_inv.setdefault("nearby_items", [])
         akira_inv.setdefault("issued_items", [])
         for item in visible_items:
@@ -403,6 +410,9 @@ def _payload_has_state_sections(payload: dict[str, Any]) -> bool:
         "story_lines_changes",
         "calendar_runtime_changes",
         "future_locks_changes",
+        "scene_continuity_changes",
+        "object_continuity_changes",
+        "npc_physical_changes",
     ])
 
 
@@ -420,7 +430,11 @@ def apply_turn_result_physical_continuity(session_id: str, request: ccp.ApplyTur
     if persistence.apply_relationship_changes_robust(sid, payload, request.dry_run):
         changed.append("state/relationships.json")
 
-    for path, names in list(base.STATE_SECTION_MAP) + [(CALENDAR_RUNTIME_FILE, ["calendar_runtime_changes", "calendar_runtime", "calendar_changes"]), (PHYSICAL_CONTINUITY_STATE_FILE, ["physical_continuity_changes", "physical_continuity_state"] )]:
+    for path, names in list(base.STATE_SECTION_MAP) + [
+        (CALENDAR_RUNTIME_FILE, ["calendar_runtime_changes", "calendar_runtime", "calendar_changes"]),
+        (PHYSICAL_CONTINUITY_STATE_FILE, ["physical_continuity_changes", "physical_continuity_state"]),
+        (SCENE_CONTINUITY_STATE_FILE, ["scene_continuity_changes", "scene_continuity_state", "npc_physical_changes", "object_continuity_changes"]),
+    ]:
         if persistence.apply_json_section_robust(sid, payload, path, names, request.dry_run):
             if path == "state/knowledge_state.json":
                 changed.extend(getattr(base, "LAST_KNOWLEDGE_CHANGED_FILES", []) or [path])

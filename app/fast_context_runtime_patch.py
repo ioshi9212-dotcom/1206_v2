@@ -50,6 +50,7 @@ FAST_ALWAYS_FILES = {
     "gpt/scene_format.md",
     "state/current_state.json",
     "state/calendar_runtime.json",
+    "state/scene_continuity_state.json",
 }
 
 FAST_STATE_SLICES = {
