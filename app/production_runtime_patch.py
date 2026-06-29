@@ -44,13 +44,13 @@ except Exception:
     roster_identity_context_guard = None  # type: ignore[assignment]
 
 # Must be imported after roster_identity_context_guard: it prevents full past.yaml
-# from leaking into ordinary gameplay prose while keeping technical audit checks possible.
+# from leaking into ordinary gameplay prose while keeping lightweight memory fragments possible.
 try:
     import app.past_visibility_guard_runtime_patch as past_visibility_guard  # noqa: F401
 except Exception:
     past_visibility_guard = None  # type: ignore[assignment]
 
-app.version = "0.3.139-past-visibility-guard-v1"
+app.version = "0.3.140-memory-fragments-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -134,4 +134,4 @@ def openapi_actions() -> dict[str, Any]:
 
 app.openapi_schema = None
 app.openapi = _openapi  # type: ignore[method-assign]
-app.version = "0.3.139-past-visibility-guard-v1"
+app.version = "0.3.140-memory-fragments-v1"
