@@ -5,6 +5,8 @@ from typing import Any
 import json
 
 import app.state_persistence_runtime_patch as state_persistence
+import app.compact_1206_base_guard_runtime_patch as compact_1206_guard  # noqa: F401
+import app.repair_roster_1206_runtime_patch as repair_roster_1206  # noqa: F401
 from app import compact as base
 
 LEGACY_KNOWLEDGE_INDEX_FILE = "state/knowledge_state.json"
@@ -17,7 +19,7 @@ NAME_TO_ID = {
     "Ирэй": "irey", "irey": "irey",
     "Эмма": "emma", "emma": "emma",
     "Райден": "raiden", "raiden": "raiden", "raiden_sterling": "raiden", "парень с пирсингом": "raiden",
-    "Рэй": "ray", "ray": "ray", "ray_carter": "ray",
+    "Рэй": "ray", "ray": "ray", "char_ray": "ray",
     "Юна": "yuna", "yuna": "yuna",
     "Мики": "miki", "miki": "miki",
 }
