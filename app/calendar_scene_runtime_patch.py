@@ -19,7 +19,7 @@ for _name in ["calendar", "engine", "canon", "characters", "gpt"]:
     except Exception:
         pass
 
-app.version = "0.3.62-calendar-day-template-time-flow"
+app.version = "0.3.131-calendar-clean-story-rules-v1"
 
 
 def _remove_route(path: str) -> None:
@@ -216,7 +216,7 @@ def get_scene_packet(
         "date": date,
         "path": day_path,
         "exists": _repo_exists(day_path),
-        "rule": "Use only current day file for active scene. Future days are for timeskip/check only.",
+        "rule": "Use only current day file for active scene. Future days are for explicit timeskip/calendar audit only.",
         "day_template_path": "calendar/days/_day_template.yaml",
     }
 
@@ -225,14 +225,17 @@ def get_scene_packet(
     hard_rules = packet.setdefault("hard_rules", [])
     for rule in [
         "Load current calendar day file before scene output.",
-        "Use day active_characters, file links, goals, scene_general_info and scene_forbidden before NPC actions.",
+        "Use day active_characters, file links, goals, scene_general_info, timing_windows and scene_forbidden before NPC actions.",
+        "Calendar defines world pressure and NPC timing; it does not write Akira's action for the player.",
+        "Conditional arrivals require plausible travel/search time unless current_state already places the character nearby.",
         "Scene time must advance by semantic duration, not by one minute per turn.",
+        "If player chooses sleep/rest/timeskip, continue to the next meaningful beat instead of asking what wakes Akira.",
         "After gameplay scene, save current_state.time and last_time_advance_min through applyTurnResult.",
     ]:
         if rule not in hard_rules:
             hard_rules.append(rule)
 
-    packet["packet_version"] = "1206v2_scene_packet_v3_calendar_day_time_flow"
+    packet["packet_version"] = "1206v2_scene_packet_v4_calendar_clean_story_rules"
     packet["runtime_version"] = app.version
     return packet
 
