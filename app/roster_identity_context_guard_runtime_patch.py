@@ -1,6 +1,6 @@
 """Runtime guard for roster, identity aliases and readable scene flow.
 
-This patch fixes systemic scene assembly issues, not one specific scene:
+Systemic fix, not a one-scene repair:
 - infer current active characters from visible scene/history when current_state is stale;
 - bind visible Sterling/cosuh/piercing descriptors to character_id=raiden;
 - keep Ray/Raiden cards loaded when they are physically present;
@@ -21,6 +21,8 @@ import app.compact_context_patch as ccp
 from app import compact as base
 
 app = base.app
+
+_ORIGINAL_CANONICAL_ID = getattr(context_transport, "canonical_id", lambda value: str(value or "").strip())
 
 LOCK_FILE = "gpt/locks/roster_identity_and_style_guard.md"
 SCENE_CONTINUITY_FILE = "state/scene_continuity_state.json"
@@ -90,29 +92,21 @@ def canonical_id(value: Any) -> str:
     lowered = _norm(raw)
     if lowered in ALIASES:
         return ALIASES[lowered]
-    try:
-        return context_transport.canonical_id(raw)
-    except Exception:
-        return raw
+    return _ORIGINAL_CANONICAL_ID(raw)
 
 
 def _known_character(cid: str) -> bool:
     try:
-        return bool(context_transport.is_known_character_id(cid))
+        return bool(context_transport.known_character_folder(cid))
     except Exception:
-        try:
-            return bool(context_transport.known_character_folder(cid))
-        except Exception:
-            return cid in {"akira", "jun", "irey", "emma", "raiden", "ray", "yuna", "miki"}
+        return cid in {"akira", "jun", "irey", "emma", "raiden", "ray", "yuna", "miki"}
 
 
 def _history_entries(history: Any) -> list[dict[str, Any]]:
     if isinstance(history, list):
         return [x for x in history if isinstance(x, dict)]
-    if isinstance(history, dict):
-        entries = history.get("entries")
-        if isinstance(entries, list):
-            return [x for x in entries if isinstance(x, dict)]
+    if isinstance(history, dict) and isinstance(history.get("entries"), list):
+        return [x for x in history["entries"] if isinstance(x, dict)]
     return []
 
 
@@ -153,8 +147,10 @@ def _current_text(current: dict[str, Any], extra_text: str = "") -> str:
 
 
 def _ray_named(text: str) -> bool:
-    # Match Ray/Рэй as its own word. Do not let Райден/Рейден count as Ray.
-    return bool(re.search(r"(?<![а-яa-z])рэй(?![а-яa-z])", text) or re.search(r"(?<![а-яa-z])рей(?!д[её]н)(?![а-яa-z])", text))
+    return bool(
+        re.search(r"(?<![а-яa-z])рэй(?![а-яa-z])", text)
+        or re.search(r"(?<![а-яa-z])рей(?!д[её]н)(?![а-яa-z])", text)
+    )
 
 
 def _infer_ids_from_text(text: str) -> list[str]:
@@ -173,29 +169,29 @@ def _infer_ids_from_text(text: str) -> list[str]:
     return _unique(ids)
 
 
-def infer_scene_character_ids(session_id: str, current: dict[str, Any] | None = None, extra_text: str = "") -> list[str]:
-    current = current or {}
-    text = _current_text(current, extra_text=extra_text) + "\n" + _recent_history_text(session_id)
-    text_norm = _norm(text)
-    checkpoint_scene = any(word in text_norm for word in CHECKPOINT_WORDS)
-
+def _recommended_scene_ids_from_current(current: dict[str, Any], future: dict[str, Any] | None = None) -> list[str]:
     ids: list[str] = ["akira"]
     for field in context_transport.CHARACTER_FIELDS:
         for value in current.get(field, []) or []:
             cid = canonical_id(value)
             if cid and _known_character(cid):
                 ids.append(cid)
+    ids.extend(_infer_ids_from_text(_current_text(current)))
+    return [cid for cid in _unique(ids) if _known_character(cid)]
 
+
+def infer_scene_character_ids(session_id: str, current: dict[str, Any] | None = None, extra_text: str = "") -> list[str]:
+    current = current or {}
+    text = _current_text(current, extra_text=extra_text) + "\n" + _recent_history_text(session_id)
+    text_norm = _norm(text)
+    checkpoint_scene = any(word in text_norm for word in CHECKPOINT_WORDS)
+
+    ids = _recommended_scene_ids_from_current(current)
     ids.extend(_infer_ids_from_text(text))
     ids = _unique(ids)
 
-    # If the scene has moved to the East checkpoint and Emma is not in the current
-    # visible/history text, treat her as offscreen instead of keeping the stale start roster.
     if checkpoint_scene and "эмма" not in text_norm and "emma" in ids:
         ids = [cid for cid in ids if cid != "emma"]
-
-    # At the checkpoint, visible Sterling/cosuh/piercing is not a generic NPC.
-    # It is Raiden, so Raiden must be loaded whenever that descriptor is in the scene.
     if checkpoint_scene and any(word in text_norm for word in RAIDEN_WORDS) and "raiden" not in ids:
         ids.append("raiden")
 
@@ -265,13 +261,7 @@ def character_files_for_context(cid: str, *, include_past: bool = False) -> list
 def recommended_files_for_context(current: dict[str, Any] | None = None, future: dict[str, Any] | None = None) -> list[str]:
     current = current or {}
     future = future or {}
-    ids: list[str] = ["akira"]
-    for field in context_transport.CHARACTER_FIELDS:
-        for value in current.get(field, []) or []:
-            cid = canonical_id(value)
-            if cid and _known_character(cid):
-                ids.append(cid)
-    ids.extend(_infer_ids_from_text(_current_text(current)))
+    ids = _recommended_scene_ids_from_current(current, future)
     for thread in current.get("open_threads", []) or []:
         if isinstance(thread, dict) and thread.get("status") in {"due", "active", "triggered"}:
             ids.extend(canonical_id(x) for x in thread.get("participants", []) or [])
@@ -284,7 +274,7 @@ def recommended_files_for_context(current: dict[str, Any] | None = None, future:
         "runtime/scene_context_digest.md",
         "state/current_state.json",
         "state/calendar_runtime.json",
-        "state/scene_continuity_state.json",
+        SCENE_CONTINUITY_FILE,
         "gpt/locks/runtime_scene_rules_digest.md",
         LOCK_FILE,
         "gpt/scene_format.md",
@@ -316,19 +306,20 @@ def _visible_text_from_request(request: Any) -> str:
     return ""
 
 
-# Patch aliases / selectors used by earlier runtime layers.
-context_transport.ID_ALIASES.update(ALIASES)
+# Patch aliases/selectors used by earlier runtime layers.
+try:
+    context_transport.ID_ALIASES.update(ALIASES)
+except Exception:
+    pass
 context_transport.canonical_id = canonical_id  # type: ignore[assignment]
 context_transport.character_files_for_context = character_files_for_context  # type: ignore[assignment]
 context_transport.lean_recommended_files_for_context = recommended_files_for_context  # type: ignore[assignment]
-context_transport.scene_character_ids = lambda current=None, future=None: recommended_scene_ids_from_current(current or {}, future or {})  # type: ignore[assignment]
+context_transport.scene_character_ids = lambda current=None, future=None: _recommended_scene_ids_from_current(current or {}, future or {})  # type: ignore[assignment]
 base.recommended_files_for_context = recommended_files_for_context
-base.active_scene_characters = lambda current=None, future=None: recommended_scene_ids_from_current(current or {}, future or {})
+base.active_scene_characters = lambda current=None, future=None: _recommended_scene_ids_from_current(current or {}, future or {})
 ccp.recommended_files_for_context = recommended_files_for_context  # type: ignore[assignment]
-ccp.active_scene_characters = lambda current=None, future=None: recommended_scene_ids_from_current(current or {}, future or {})  # type: ignore[assignment]
+ccp.active_scene_characters = lambda current=None, future=None: _recommended_scene_ids_from_current(current or {}, future or {})  # type: ignore[assignment]
 
-# Make hidden physical continuity available to fast context; it is compact state,
-# not visible header text.
 try:
     fast_context.FAST_ALWAYS_FILES.add(SCENE_CONTINUITY_FILE)
     fast_context.FAST_ALWAYS_FILES.add(LOCK_FILE)
@@ -336,22 +327,7 @@ except Exception:
     pass
 fast_context._required_files_for_session = _required_files_for_session_guard  # type: ignore[assignment]
 
-
-def recommended_scene_ids_from_current(current: dict[str, Any], future: dict[str, Any] | None = None) -> list[str]:
-    # Session-independent fallback used by older helpers. It cannot read history,
-    # so it relies on current fields only.
-    ids: list[str] = ["akira"]
-    for field in context_transport.CHARACTER_FIELDS:
-        for value in current.get(field, []) or []:
-            cid = canonical_id(value)
-            if cid and _known_character(cid):
-                ids.append(cid)
-    ids.extend(_infer_ids_from_text(_current_text(current)))
-    return [cid for cid in _unique(ids) if _known_character(cid)]
-
-
-# Replace applyTurnResult with a wrapper that syncs roster/location from visible text
-# before the normal persistence layer writes scene history.
+# Wrap applyTurnResult so roster/location sync happens before scene_history snapshot.
 fast_context._remove_routes(ccp.APPLY_TURN_RESULT_PATH, {"POST"}, "applyTurnResult")
 
 
@@ -359,13 +335,11 @@ fast_context._remove_routes(ccp.APPLY_TURN_RESULT_PATH, {"POST"}, "applyTurnResu
 def apply_turn_result_with_roster_guard(session_id: str, request: ccp.ApplyTurnResultWithVisibleSceneRequest = ccp.ApplyTurnResultWithVisibleSceneRequest()):
     sid = base.safe_session_id(session_id)
     base.ensure_session(sid)
-    visible_text = _visible_text_from_request(request)
     current = base.read_json("state/current_state.json", sid, default={}) or {}
-    _sync_current_for_context(sid, current, extra_text=visible_text)
+    _sync_current_for_context(sid, current, extra_text=_visible_text_from_request(request))
     return state_persistence.apply_turn_result_persistent(session_id, request)
 
-
-# Replace turn-contract route so the exposed roster is synced before GPT renders.
+# Wrap turn contract so exposed roster is synced before GPT renders.
 fast_context._remove_routes(fast_context.TURN_CONTRACT_PATH, {"GET"}, "getSessionTurnContract")
 
 
@@ -379,8 +353,7 @@ def get_session_turn_contract_roster_guard(session_id: str) -> dict[str, Any]:
     ids = infer_scene_character_ids(sid, current)
     data["active_character_ids"] = ids
     data["nearby_character_ids"] = [cid for cid in ids if cid != "akira"]
-    data.setdefault("required_checks_before_answer", [])
-    data["required_checks_before_answer"] = _unique(list(data["required_checks_before_answer"]) + [
+    data["required_checks_before_answer"] = _unique(list(data.get("required_checks_before_answer", []) or []) + [
         "Known names are time-scoped: use a personal name only if the current POV or speaking NPC had that name before the line being rendered.",
         "A later line in scene history cannot retroactively justify an earlier name use.",
         "Visible Sterling/cosuh/piercing descriptors bind to character_id=raiden; do not treat him as a generic NPC.",
@@ -396,8 +369,7 @@ def get_session_turn_contract_roster_guard(session_id: str) -> dict[str, Any]:
         contract["rules"] = _unique(rules)
     return data
 
-
-# Re-register fast context route so sync also happens when the client calls it directly.
+# Wrap fast context so direct calls also sync roster/location first.
 fast_context._remove_routes(fast_context.FAST_CONTEXT_PATH, {"GET"}, "getFastRenderContext")
 
 
@@ -412,7 +384,7 @@ def get_fast_render_context_roster_guard(
     base.ensure_session(sid)
     current = base.read_json("state/current_state.json", sid, default={}) or {}
     current = _sync_current_for_context(sid, current)
-    required_files, current, future = _required_files_for_session_guard(sid)
+    required_files, current, _future = _required_files_for_session_guard(sid)
     loaded_files, skipped_files, truncated = fast_context._build_fast_loaded_files(
         sid,
         required_files,
