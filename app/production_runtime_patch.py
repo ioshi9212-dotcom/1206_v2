@@ -12,15 +12,11 @@ import app.physical_continuity_runtime_patch as physical_continuity  # noqa: F40
 import app.character_entry_runtime_patch as character_entry  # noqa: F401
 import app.fast_context_runtime_patch as fast_context  # noqa: F401
 
-# Optional patch from the previous NPC ZIP. Keep it here so this file does not
-# accidentally disable living NPC/session NPC support when applied after it.
 try:
     import app.npc_living_runtime_patch as npc_living  # noqa: F401
 except Exception:
     npc_living = None  # type: ignore[assignment]
 
-# East Sector location/base context and story rule locks. These are rule/context
-# patches, not gameplay logs.
 try:
     import app.east_sector_context_runtime_patch as east_sector_context  # noqa: F401
 except Exception:
@@ -36,29 +32,27 @@ try:
 except Exception:
     knowledge_state_runtime = None  # type: ignore[assignment]
 
-# Must be imported after fast_context/state_persistence: it wraps turn-contract,
-# fast-render-context and apply-turn-result to prevent stale roster / NPC identity drift.
 try:
     import app.roster_identity_context_guard_runtime_patch as roster_identity_context_guard  # noqa: F401
 except Exception:
     roster_identity_context_guard = None  # type: ignore[assignment]
 
-# Must be imported after roster_identity_context_guard: it prevents full past.yaml
-# from leaking into ordinary gameplay prose while keeping lightweight memory fragments possible.
 try:
     import app.past_visibility_guard_runtime_patch as past_visibility_guard  # noqa: F401
 except Exception:
     past_visibility_guard = None  # type: ignore[assignment]
 
-# Canon-level living-character depth rule. This is not a new lock: it loads
-# canon/character_depth_and_rotation.md and prioritizes active/nearby/speaking/
-# observing character cards in fast context.
 try:
     import app.character_depth_context_runtime_patch as character_depth_context  # noqa: F401
 except Exception:
     character_depth_context = None  # type: ignore[assignment]
 
-app.version = "0.3.141-live-character-depth-v1"
+try:
+    import app.essential_character_context_runtime_patch as essential_character_context  # noqa: F401
+except Exception:
+    essential_character_context = None  # type: ignore[assignment]
+
+app.version = "0.3.142-essential-character-context-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -142,4 +136,4 @@ def openapi_actions() -> dict[str, Any]:
 
 app.openapi_schema = None
 app.openapi = _openapi  # type: ignore[method-assign]
-app.version = "0.3.141-live-character-depth-v1"
+app.version = "0.3.142-essential-character-context-v1"
