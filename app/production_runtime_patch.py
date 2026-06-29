@@ -43,7 +43,14 @@ try:
 except Exception:
     roster_identity_context_guard = None  # type: ignore[assignment]
 
-app.version = "0.3.138-roster-identity-context-guard-v1"
+# Must be imported after roster_identity_context_guard: it prevents full past.yaml
+# from leaking into ordinary gameplay prose while keeping technical audit checks possible.
+try:
+    import app.past_visibility_guard_runtime_patch as past_visibility_guard  # noqa: F401
+except Exception:
+    past_visibility_guard = None  # type: ignore[assignment]
+
+app.version = "0.3.139-past-visibility-guard-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -87,7 +94,6 @@ def _fast_context_params() -> list[dict]:
     return [
         {"name": "max_total_chars", "in": "query", "required": False, "schema": {"type": "integer", "default": 26000, "minimum": 12000, "maximum": 42000}},
         {"name": "per_file_chars", "in": "query", "required": False, "schema": {"type": "integer", "default": 4500, "minimum": 1800, "maximum": 8000}},
-        {"name": "include_past", "in": "query", "required": False, "schema": {"type": "boolean", "nullable": True}},
     ]
 
 
@@ -128,4 +134,4 @@ def openapi_actions() -> dict[str, Any]:
 
 app.openapi_schema = None
 app.openapi = _openapi  # type: ignore[method-assign]
-app.version = "0.3.138-roster-identity-context-guard-v1"
+app.version = "0.3.139-past-visibility-guard-v1"
