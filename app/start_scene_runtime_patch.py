@@ -45,27 +45,30 @@ VOICE_IDENTITY_MAP = {
 START_CHARACTER_IDS = ["akira", "jun", "irey", "emma"]
 CONDITIONAL_CHARACTER_IDS = ["raiden", "ray"]
 
+# Active 1206 v2 unified character-card standard.
+# Legacy files like *_main_profile.yaml / *_hidden_past.yaml are intentionally
+# not referenced here. They may remain in the repository until cleanup, but the
+# runtime should load the new split card files.
 START_CHARACTER_FILES: dict[str, list[str]] = {
     "akira": [
-        "characters/akira/akira_main_profile.yaml",
-        "characters/akira/akira_knowledge_connections.yaml",
-        "characters/akira/akira_hidden_past.yaml",
-        "characters/akira/akira_thought_triggers.yaml",
+        "characters/akira/main.yaml",
+        "characters/akira/character.yaml",
+        "characters/akira/knowledge.yaml",
     ],
     "jun": [
-        "characters/jun/jun_main_profile.yaml",
-        "characters/jun/jun_knowledge_connections.yaml",
-        "characters/jun/jun_hidden_past.yaml",
+        "characters/jun/main.yaml",
+        "characters/jun/character.yaml",
+        "characters/jun/knowledge.yaml",
     ],
     "irey": [
-        "characters/irey/irey_main_profile.yaml",
-        "characters/irey/irey_knowledge_connections.yaml",
-        "characters/irey/irey_hidden_past.yaml",
+        "characters/irey/main.yaml",
+        "characters/irey/character.yaml",
+        "characters/irey/knowledge.yaml",
     ],
     "emma": [
-        "characters/emma/emma_main_profile.yaml",
-        "characters/emma/emma_knowledge_connections.yaml",
-        "characters/emma/emma_hidden_past.yaml",
+        "characters/emma/main.yaml",
+        "characters/emma/character.yaml",
+        "characters/emma/knowledge.yaml",
     ],
 }
 
@@ -333,7 +336,7 @@ def _attach_start_scene_context(packet: dict[str, Any], session_id: str) -> dict
         "If user starts a new game with 'начнем/начнём/старт/start', create a session and output initial_scene.exact_text verbatim.",
         "For the first start_scene output, do not rewrite, shorten, expand or continue the exact text.",
         "Hidden runtime map: 'Женский голос снизу' is emma; 'Незнакомый мужской голос' is irey. Do not reveal those names in Akira POV before in-scene reveal.",
-        "For start_scene, load/read Akira, Jun, Irey and Emma character files and goals before NPC reactions.",
+        "For start_scene, load/read Akira, Jun, Irey and Emma unified character files and goals before NPC reactions.",
     ]:
         if rule not in hard_rules:
             hard_rules.append(rule)
