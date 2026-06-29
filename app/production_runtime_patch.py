@@ -50,7 +50,15 @@ try:
 except Exception:
     past_visibility_guard = None  # type: ignore[assignment]
 
-app.version = "0.3.140-memory-fragments-v1"
+# Canon-level living-character depth rule. This is not a new lock: it loads
+# canon/character_depth_and_rotation.md and prioritizes active/nearby/speaking/
+# observing character cards in fast context.
+try:
+    import app.character_depth_context_runtime_patch as character_depth_context  # noqa: F401
+except Exception:
+    character_depth_context = None  # type: ignore[assignment]
+
+app.version = "0.3.141-live-character-depth-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -134,4 +142,4 @@ def openapi_actions() -> dict[str, Any]:
 
 app.openapi_schema = None
 app.openapi = _openapi  # type: ignore[method-assign]
-app.version = "0.3.140-memory-fragments-v1"
+app.version = "0.3.141-live-character-depth-v1"
