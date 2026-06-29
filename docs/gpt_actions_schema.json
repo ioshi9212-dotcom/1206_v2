@@ -2,14 +2,343 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Akira 1206 v2 Actions",
-    "description": "Stable GPT Actions schema for Akira 1206 v2. Use processTurn for the exact first start scene.",
-    "version": "0.3.71-1206-production-start-sizeguard"
+    "version": "0.3.136-openapi-context-anchor-cleanup-v1"
   },
   "servers": [
     {
       "url": "https://1206v2-production.up.railway.app"
     }
   ],
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "app": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "public_base_url": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "SessionResponse": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "start_scene": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "session_id"
+        ]
+      },
+      "SizeGuardContextResponse": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "current_state": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "active_character_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "nearby_character_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "usage_note": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "session_id"
+        ]
+      },
+      "TurnContractWithPromptPreview": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "active_character_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "nearby_character_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "fast_context_file_hints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "context_files_available": {
+            "type": "integer"
+          },
+          "output_format_contract": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "required_checks_before_answer": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "knowledge_table": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "inventory_contract": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "relationship_context": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "story_context": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "prompt_preview": {
+            "type": "string"
+          },
+          "fast_context_available": {
+            "type": "boolean"
+          },
+          "preferred_next_action": {
+            "type": "string"
+          },
+          "usage_note": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true,
+        "required": [
+          "session_id",
+          "prompt_preview"
+        ]
+      },
+      "FastRenderContextResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "quality_mode": {
+            "type": "string"
+          },
+          "context_files_total": {
+            "type": "integer"
+          },
+          "loaded_files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {},
+              "additionalProperties": true
+            }
+          },
+          "loaded_count": {
+            "type": "integer"
+          },
+          "skipped_files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "skipped_count": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "needs_full_context": {
+            "type": "boolean"
+          },
+          "past_context_loaded": {
+            "type": "boolean"
+          },
+          "render_rules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "ProcessTurnResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "player_input": {
+            "type": "string"
+          },
+          "current_scene_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "scene_text": {
+            "type": "string"
+          },
+          "scene_packet": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      },
+      "ApplyTurnResultResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "changed_files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "visible_scene_text": {
+            "type": "string"
+          },
+          "final_scene_text": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "PhysicalContinuityRepairResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "changed_files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reason": {
+            "type": "string"
+          },
+          "physical_continuity_state": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      },
+      "CharacterEntryRepairResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "session_id": {
+            "type": "string"
+          },
+          "changed_files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reason": {
+            "type": "string"
+          },
+          "pending": {
+            "type": "object",
+            "properties": {},
+            "additionalProperties": true
+          },
+          "current_state_pending_character_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
   "paths": {
     "/health": {
       "get": {
@@ -21,8 +350,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/HealthResponse"
                 }
               }
             }
@@ -33,28 +361,25 @@
     "/api/v1/sessions": {
       "post": {
         "operationId": "createSession",
-        "summary": "Create or initialize a gameplay session",
+        "summary": "Create a new gameplay session",
         "requestBody": {
           "required": false,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
-                "additionalProperties": true,
                 "properties": {
                   "session_id": {
-                    "type": "string",
-                    "default": "main-1206-v2"
+                    "type": "string"
                   },
                   "title": {
-                    "type": "string",
-                    "default": "Akira 1206 v2"
+                    "type": "string"
                   },
                   "reset": {
-                    "type": "boolean",
-                    "default": false
+                    "type": "boolean"
                   }
-                }
+                },
+                "additionalProperties": true
               }
             }
           }
@@ -65,87 +390,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/sessions/{session_id}/turn": {
-      "post": {
-        "operationId": "processTurn",
-        "summary": "Process a gameplay turn. For player_input='начнем', returns the exact first start scene.",
-        "parameters": [
-          {
-            "name": "session_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "default": "main-1206-v2"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "additionalProperties": true,
-                "required": [
-                  "player_input"
-                ],
-                "properties": {
-                  "player_input": {
-                    "type": "string"
-                  },
-                  "mode": {
-                    "type": "string",
-                    "default": "play"
-                  },
-                  "include_file_contents": {
-                    "type": "boolean",
-                    "default": true
-                  },
-                  "state_patches": {
-                    "type": "object",
-                    "additionalProperties": true
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Processed turn with scene_text or compact contract",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "session_id": {
-                      "type": "string"
-                    },
-                    "status": {
-                      "type": "string"
-                    },
-                    "scene_text": {
-                      "type": "string"
-                    },
-                    "scene_packet": {
-                      "type": "object",
-                      "additionalProperties": true
-                    }
-                  }
+                  "$ref": "#/components/schemas/SessionResponse"
                 }
               }
             }
@@ -163,8 +408,7 @@
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "default": "main-1206-v2"
+              "type": "string"
             }
           }
         ],
@@ -174,8 +418,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/SizeGuardContextResponse"
                 }
               }
             }
@@ -186,15 +429,14 @@
     "/api/v1/sessions/{session_id}/turn-contract": {
       "get": {
         "operationId": "getSessionTurnContract",
-        "summary": "Get compact turn contract. For normal gameplay call getFastRenderContext next.",
+        "summary": "Get compact turn contract. For normal turns, call getFastRenderContext next.",
         "parameters": [
           {
             "name": "session_id",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "default": "main-1206-v2"
+              "type": "string"
             }
           }
         ],
@@ -204,8 +446,66 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/TurnContractWithPromptPreview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/fast-render-context": {
+      "get": {
+        "operationId": "getFastRenderContext",
+        "summary": "Get fast render context for normal gameplay: runtime digest, active character files, and selected state slices",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "max_total_chars",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 24000,
+              "minimum": 12000,
+              "maximum": 36000
+            }
+          },
+          {
+            "name": "per_file_chars",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 4000,
+              "minimum": 1800,
+              "maximum": 7000
+            }
+          },
+          {
+            "name": "include_past",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "nullable": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fast render context",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastRenderContextResponse"
                 }
               }
             }
@@ -216,15 +516,14 @@
     "/api/v1/sessions/{session_id}/scene-packet": {
       "get": {
         "operationId": "getScenePacket",
-        "summary": "Get compact scene packet",
+        "summary": "Get one compact scene packet",
         "parameters": [
           {
             "name": "session_id",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "default": "main-1206-v2"
+              "type": "string"
             }
           }
         ],
@@ -235,7 +534,68 @@
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "properties": {},
                   "additionalProperties": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/turn": {
+      "post": {
+        "operationId": "processTurn",
+        "summary": "Return gameplay scene or compact scene packet",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "player_input": {
+                    "type": "string"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "default": "play"
+                  },
+                  "include_file_contents": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "state_patches": {
+                    "type": "object",
+                    "properties": {},
+                    "additionalProperties": true
+                  }
+                },
+                "additionalProperties": true,
+                "required": [
+                  "player_input"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Processed turn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProcessTurnResponse"
                 }
               }
             }
@@ -246,15 +606,14 @@
     "/api/v1/sessions/{session_id}/apply-turn-result": {
       "post": {
         "operationId": "applyTurnResult",
-        "summary": "Apply meaningful scene changes to session state",
+        "summary": "Apply meaningful scene changes and fallback physical continuity from visible_scene_text",
         "parameters": [
           {
             "name": "session_id",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "string",
-              "default": "main-1206-v2"
+              "type": "string"
             }
           }
         ],
@@ -264,13 +623,13 @@
             "application/json": {
               "schema": {
                 "type": "object",
-                "additionalProperties": true,
                 "properties": {
                   "turn_file": {
                     "type": "string"
                   },
                   "data": {
                     "type": "object",
+                    "properties": {},
                     "additionalProperties": true
                   },
                   "dry_run": {
@@ -279,15 +638,9 @@
                   },
                   "visible_scene_text": {
                     "type": "string"
-                  },
-                  "scene_text": {
-                    "type": "string"
-                  },
-                  "state_patches": {
-                    "type": "object",
-                    "additionalProperties": true
                   }
-                }
+                },
+                "additionalProperties": true
               }
             }
           }
@@ -298,8 +651,99 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "additionalProperties": true
+                  "$ref": "#/components/schemas/ApplyTurnResultResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/repair/physical-continuity": {
+      "post": {
+        "operationId": "repairPhysicalContinuity",
+        "summary": "Repair current_state/inventory_state from latest scene_history visible scene",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dry_run",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Physical continuity repair result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhysicalContinuityRepairResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sessions/{session_id}/repair/character-entry": {
+      "post": {
+        "operationId": "repairCharacterEntry",
+        "summary": "Repair hidden pending character-entry state, especially Raiden's late-night conditional entry",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "name": "dry_run",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Character entry repair result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CharacterEntryRepairResponse"
                 }
               }
             }

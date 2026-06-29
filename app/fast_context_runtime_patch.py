@@ -4,9 +4,9 @@ from __future__ import annotations
 
 Goal:
 - keep scene quality and character fidelity;
-- stop forcing GPT to reload every required file chunk on every ordinary turn;
-- keep old manifest/chunk endpoints compatible, but cache their heavy bundle;
-- add getFastRenderContext for normal gameplay turns.
+- make getFastRenderContext the only normal-turn context source;
+- keep old diagnostic endpoints harmless if an old client calls them;
+- avoid exposing file-loader loop vocabulary in public prompts/responses.
 
 Import this patch after response_size_guard_runtime_patch and character_entry_runtime_patch
 in app/production_runtime_patch.py.
@@ -439,29 +439,28 @@ def get_session_turn_contract_fast_hint(session_id: str) -> dict[str, Any]:
             "future_locks_progress": future,
         }
 
-    # IMPORTANT: do not expose the full required file list as a to-do list.
-    # The model was treating it as an instruction to call every chunk and could
-    # spend many minutes "talking to the repo". getFastRenderContext is the only
-    # normal-turn loader; full chunks are hidden/diagnostic fallback.
-    data["required_files"] = []
-    data["fast_context_file_hints"] = fast_file_hints[:24]
-    data["full_required_files_count"] = len(all_required_files)
+    # Do not expose the full static file list as a to-do list. The model must not
+    # receive old loader-loop anchors in normal gameplay. Fast context is enough.
+    data.pop("required_files", None)
+    data.pop("full_required_files_count", None)
+    data["fast_context_file_hints"] = fast_file_hints[:16]
+    data["context_files_available"] = len(all_required_files)
     data["fast_context_available"] = True
     data["preferred_next_action"] = "getFastRenderContext"
     data["required_checks_before_answer"] = [
         "Call getFastRenderContext next for normal gameplay and render from it.",
-        "Do not call required-files manifest/chunk in normal gameplay.",
-        "Use full file chunks only during explicit diagnostics or manual audit, not during scene rendering.",
+        "Do not use diagnostic file-loader endpoints during gameplay.",
+        "Render from the fast context and visible state; do not start a repository scan.",
     ]
     data["prompt_preview"] = (
-        "PLAY MODE 1206 FAST ONLY BRIEF\n"
+        "PLAY MODE 1206 FAST BRIEF\n"
         "- Call getFastRenderContext for this session_id before rendering normal gameplay.\n"
-        "- Render from fast context: runtime digest + active character files + compact state slices.\n"
-        "- Do not call required-files manifest/chunk for ordinary movement, dialogue, medical checks, or scene continuation.\n"
-        "- If context is missing, continue from the fast context and visible state; ask for full audit only outside gameplay.\n"
+        "- Render from fast context: runtime digest, active character files, and compact state slices.\n"
+        "- Do not use diagnostic file-loader endpoints for ordinary movement, dialogue, medical checks, or scene continuation.\n"
+        "- If context is missing, continue from fast context and visible state; request manual audit only outside gameplay.\n"
         "- Preserve character fidelity and output the gameplay scene only.\n"
     )
-    data["usage_note"] = "Normal gameplay uses getFastRenderContext only. Full chunks are diagnostic-only and hidden from the action schema."
+    data["usage_note"] = "Normal gameplay uses getFastRenderContext only. Do not scan the repository during a scene."
     return data
 
 
@@ -474,15 +473,9 @@ def get_required_files_manifest_light(session_id: str) -> dict[str, Any]:
     return {
         "session_id": sid,
         "mode": "diagnostic_disabled_for_normal_gameplay",
-        "cache_enabled": True,
-        "required_files": [],
-        "files": [],
-        "missing_files": [],
-        "loaded_count": 0,
-        "missing_count": 0,
-        "total_parts": 0,
-        "chunks_total": 0,
-        "usage_note": "Use getFastRenderContext. Full manifest/chunk loading is disabled for normal gameplay.",
+        "status": "disabled",
+        "next_action": "getFastRenderContext",
+        "usage_note": "Use getFastRenderContext. Diagnostic file loading is disabled during gameplay.",
     }
 
 
@@ -496,23 +489,13 @@ def _required_files_chunk_cached_response(
 ) -> dict[str, Any]:
     sid = _safe_session_id(session_id)
     base.ensure_session(sid)
-    if not force_full_context:
+    if True:
         return {
             "session_id": sid,
-            "mode": "full_chunks_disabled_for_normal_gameplay",
-            "cache_enabled": True,
-            "cache_hit": False,
-            "required_files": [],
-            "chunk_index": 0,
-            "chunks_total": 0,
-            "has_more": False,
-            "next_chunk_index": None,
-            "loaded_files": [],
-            "missing_files": [],
-            "loaded_count": 0,
-            "missing_count": 0,
-            "total_loaded_parts": 0,
-            "usage_note": "Use getFastRenderContext. Full chunks require explicit force_full_context=true diagnostic mode.",
+            "mode": "diagnostic_disabled_for_normal_gameplay",
+            "status": "disabled",
+            "next_action": "getFastRenderContext",
+            "usage_note": "Use getFastRenderContext. Diagnostic file loading is disabled during gameplay.",
         }
     required_files, _current, _future = _required_files_for_session(sid)
     key = _cache_key(sid, required_files)
@@ -568,8 +551,8 @@ def get_required_files_bundle_cached(
 @app.get(FAST_CONTEXT_PATH, operation_id="getFastRenderContext")
 def get_fast_render_context(
     session_id: str,
-    max_total_chars: int = Query(default=45000, ge=24000, le=70000),
-    per_file_chars: int = Query(default=8000, ge=2500, le=14000),
+    max_total_chars: int = Query(default=24000, ge=12000, le=36000),
+    per_file_chars: int = Query(default=4000, ge=1800, le=7000),
     include_past: bool | None = Query(default=None),
 ) -> dict[str, Any]:
     sid = _safe_session_id(session_id)
@@ -590,7 +573,7 @@ def get_fast_render_context(
         "mode": "fast_render_context_v1",
         "runtime_version": app.version,
         "quality_mode": "preserve_character_fidelity_without_full_chunk_reload",
-        "required_files_total": len(required_files),
+        "context_files_total": len(required_files),
         "loaded_files": loaded_files,
         "loaded_count": len(loaded_files),
         "skipped_files": skipped_files,
@@ -606,7 +589,7 @@ def get_fast_render_context(
                 "contradiction in character behavior",
                 "needs_full_context=true",
             ],
-            "action": "stop gameplay and request manual diagnostic outside the scene; do not start required-file chunk loops during gameplay",
+            "action": "stop gameplay and request manual audit outside the scene; do not start repository/file-loader loops during gameplay",
         },
         "render_rules": [
             "Use fast context as sufficient for ordinary gameplay turns.",
@@ -618,6 +601,6 @@ def get_fast_render_context(
 
 
 try:
-    app.version = "0.3.135-fast-only-no-chunk-loop-v1"
+    app.version = "0.3.136-openapi-context-anchor-cleanup-v1"
 except Exception:
     pass
