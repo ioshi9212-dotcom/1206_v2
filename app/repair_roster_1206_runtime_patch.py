@@ -73,10 +73,15 @@ def repair_scene_roster_1206(session_id: str, request: RepairSceneRoster1206Requ
     }
 
 
-# Import after route override: this patch only changes context file selection / digest budget.
+# Import after route override: these patches only change context file selection / output rules.
 try:
     import app.context_loading_budget_runtime_patch as context_loading_budget  # noqa: F401
 except Exception:
     context_loading_budget = None  # type: ignore[assignment]
+
+try:
+    import app.akira_micro_reply_runtime_patch as akira_micro_reply  # noqa: F401
+except Exception:
+    akira_micro_reply = None  # type: ignore[assignment]
 
 app.version = f"{getattr(app, 'version', '0.3')}-repair-roster-1206"
