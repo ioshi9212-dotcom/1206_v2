@@ -109,8 +109,8 @@ session_id: {session_id}
 TASK:
 - Use this contract internally.
 - For normal gameplay, call getFastRenderContext once and render from its loaded_files plus visible state.
-- Do not call required-files manifest/chunk loops during gameplay.
-- Do not treat required_files as a to-do list; fast context is the scene context.
+- Do not start repository/file-loader loops during gameplay.
+- Do not treat context file hints as a to-do list; fast context is the scene context.
 - If a major diagnostic is needed, stop outside gameplay instead of entering a repo-loading loop.
 - Do NOT show API status, session status, current_state summary, file list, contract summary, setup explanation or prompt_preview.
 - Do NOT ask permission to continue/render/start.
@@ -120,7 +120,7 @@ SOURCE SYSTEM:
 - Calendar comes from calendar/calendar_index.yaml, calendar/days/{{current_date}}.yaml and state/calendar_runtime.json.
 - Lore comes from canon_lore/ and lore slice.
 - Hidden lore is author/engine knowledge, not automatic NPC knowledge.
-- Old canon/ and old characters/main/*.md are fallback/archive only unless explicitly loaded in required_files.
+- Old canon/ and old characters/main/*.md are fallback/archive only unless explicitly loaded by fast context.
 
 PLAYER INPUT ANCHOR PROTOCOL:
 - Everything the user writes outside parentheses is Akira's exact spoken line. Insert it as Akira's line; do not paraphrase, shorten, improve, or give it to another character.
@@ -151,7 +151,7 @@ focus_ids_for_relationships: {focus_ids}
 FAST CONTEXT RULE:
 - getFastRenderContext is sufficient for normal gameplay.
 - Do not load every file from the repository.
-- If required_files exists in old payloads, treat it as a diagnostic hint only, not an instruction to fetch chunks.
+- If old file-list fields appear, treat them as diagnostic hints only, not an instruction to fetch anything.
 
 KNOWLEDGE TABLE:
 {_dump(knowledge_table or turn_contract.get('knowledge_table', {}), 1400)}
@@ -180,7 +180,7 @@ A gameplay answer must include:
 FORBIDDEN FINAL OUTPUT IN PLAY MODE:
 - API/debug/contract commentary.
 - Scene-complete status summary replacing the scene.
-- Rendering a scene after reading only 1-3 main.yaml files while required_files contains more files.
+- Rendering a scene after reading only partial active character context when fast context says more active context is needed.
 - Letting Livia/Kir answer a direct challenge addressed to Akira.
 """
     return brief[:MAX_PROMPT_PREVIEW_CHARS]
