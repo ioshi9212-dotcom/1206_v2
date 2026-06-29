@@ -1,9 +1,14 @@
 """1206 clean character registry patch.
 
-Keeps the Academy-style structure:
+Keeps the 1206 v2 unified character-card structure:
 characters/<id>/main.yaml
 characters/<id>/character.yaml
-characters/<id>/past.yaml
+characters/<id>/knowledge.yaml
+
+`past.yaml` is intentionally not part of the default registry bundle.
+It should be loaded only by scene/calendar/runtime conditions when the scene
+actually touches hidden past, memory, Samuel, Echo, scars, rings, self-blocking,
+or old relationships.
 
 This patch does not replace compact_context_patch. It updates its registry and
 start-scene character file refs after the normal runtime is imported.
@@ -66,7 +71,7 @@ def _character_files(cid: str) -> list[str]:
     return [
         f"characters/{folder}/main.yaml",
         f"characters/{folder}/character.yaml",
-        f"characters/{folder}/past.yaml",
+        f"characters/{folder}/knowledge.yaml",
     ]
 
 
