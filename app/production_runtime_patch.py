@@ -36,7 +36,18 @@ try:
 except Exception:
     knowledge_state_runtime = None  # type: ignore[assignment]
 
-app.version = "0.3.125-pov-npc-goal-east-v1"
+# Calendar structure, current-day loading, time/skip/sleep rules.
+try:
+    import app.calendar_context_runtime_patch as calendar_context_runtime  # noqa: F401
+except Exception:
+    calendar_context_runtime = None  # type: ignore[assignment]
+
+try:
+    import app.calendar_scene_runtime_patch as calendar_scene_runtime  # noqa: F401
+except Exception:
+    calendar_scene_runtime = None  # type: ignore[assignment]
+
+app.version = "0.3.131-calendar-clean-story-rules-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -134,4 +145,4 @@ def openapi_actions() -> dict[str, Any]:
 
 app.openapi_schema = None
 app.openapi = _openapi  # type: ignore[method-assign]
-app.version = "0.3.125-pov-npc-goal-east-v1"
+app.version = "0.3.131-calendar-clean-story-rules-v1"
