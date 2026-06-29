@@ -24,8 +24,8 @@ Volume debug:
 - `processTurn`
 - `getTurnContract` / `getSessionTurnContract`
 - `getFastRenderContext` ← основной быстрый режим для обычной игры
-- `getRequiredFilesManifest` ← полный fallback / диагностика
-- `getRequiredFilesChunk` ← полный fallback / диагностика, теперь с кэшем
+- `getFastRenderContext` ← полный fallback / диагностика
+- Полный файловый аудит ← только вручную вне gameplay
 - `submitTurnResult`
 - `applyTurnResult`
 - `readProjectFile`
@@ -44,8 +44,8 @@ Volume debug:
 1. `health`
 2. `createSession(session_id="main-1206-v2", reset=false)`
 3. `getSessionTurnContract(session_id="main-1206-v2")`
-4. `getRequiredFilesManifest(session_id="main-1206-v2")`
-5. `getRequiredFilesChunk(session_id="main-1206-v2", chunk_index=0, max_chars=30000, max_items=3)`
+4. `getFastRenderContext(session_id="main-1206-v2")`
+5. Не вызывай файловые chunks в обычной сцене.
 6. If `has_more=true`, call next chunks only for full audit mode. Normal gameplay should use `getFastRenderContext`.
 
 ## Volume expectations

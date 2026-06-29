@@ -137,33 +137,22 @@ def post_turn_contract_compat(session_id: str, body: dict[str, Any] | None = Bod
 @app.get(REQUIRED_FILES_MANIFEST_PATH, operation_id="getRequiredFilesManifest")
 def get_required_files_manifest_compat(session_id: str) -> Any:
     sid = _ensure_session_exists(session_id)
-    if ccp is not None and hasattr(ccp, "get_required_files_manifest"):
-        return ccp.get_required_files_manifest(sid)  # type: ignore[attr-defined]
-    required_files, loaded_parts, manifest, missing_files = runtime.previous_runtime._required_file_parts(sid)  # type: ignore[attr-defined]
     return {
         "session_id": sid,
-        "required_files": required_files,
-        "files": manifest,
-        "missing_files": missing_files,
-        "loaded_count": len(loaded_parts),
-        "missing_count": len(missing_files),
+        "mode": "diagnostic_disabled_for_normal_gameplay",
+        "required_files": [],
+        "files": [],
+        "missing_files": [],
+        "loaded_count": 0,
+        "missing_count": 0,
+        "chunks_total": 0,
+        "usage_note": "Use getFastRenderContext. Full file chunks are disabled for normal gameplay.",
     }
 
 
 @app.post(REQUIRED_FILES_MANIFEST_PATH, include_in_schema=False)
 def post_required_files_manifest_compat(session_id: str, body: dict[str, Any] | None = Body(default=None)) -> Any:
-    sid = _ensure_session_exists(session_id)
-    if ccp is not None and hasattr(ccp, "get_required_files_manifest"):
-        return ccp.get_required_files_manifest(sid)  # type: ignore[attr-defined]
-    required_files, loaded_parts, manifest, missing_files = runtime.previous_runtime._required_file_parts(sid)  # type: ignore[attr-defined]
-    return {
-        "session_id": sid,
-        "required_files": required_files,
-        "files": manifest,
-        "missing_files": missing_files,
-        "loaded_count": len(loaded_parts),
-        "missing_count": len(missing_files),
-    }
+    return get_required_files_manifest_compat(session_id)
 
 
 @app.get(REQUIRED_FILES_CHUNK_PATH, operation_id="getRequiredFilesChunk")
@@ -174,21 +163,26 @@ def get_required_files_chunk_compat(
     max_items: int = 1,
 ) -> Any:
     sid = _ensure_session_exists(session_id)
-    if ccp is not None and hasattr(ccp, "get_required_files_chunk"):
-        return ccp.get_required_files_chunk(sid, chunk_index=chunk_index, max_chars=max_chars, max_items=max_items)  # type: ignore[attr-defined]
-    return runtime.previous_runtime._required_file_parts(sid)  # type: ignore[attr-defined]
+    return {
+        "session_id": sid,
+        "mode": "full_chunks_disabled_for_normal_gameplay",
+        "chunk_index": 0,
+        "chunks_total": 0,
+        "has_more": False,
+        "next_chunk_index": None,
+        "required_files": [],
+        "loaded_files": [],
+        "missing_files": [],
+        "loaded_count": 0,
+        "missing_count": 0,
+        "total_loaded_parts": 0,
+        "usage_note": "Use getFastRenderContext. Do not call file chunks during gameplay.",
+    }
 
 
 @app.post(REQUIRED_FILES_CHUNK_PATH, include_in_schema=False)
 def post_required_files_chunk_compat(session_id: str, body: dict[str, Any] | None = Body(default=None)) -> Any:
-    body = body or {}
-    sid = _ensure_session_exists(session_id)
-    chunk_index = _query_int(body.get("chunk_index"), 0)
-    max_chars = _query_int(body.get("max_chars"), 12000)
-    max_items = _query_int(body.get("max_items"), 1)
-    if ccp is not None and hasattr(ccp, "get_required_files_chunk"):
-        return ccp.get_required_files_chunk(sid, chunk_index=chunk_index, max_chars=max_chars, max_items=max_items)  # type: ignore[attr-defined]
-    return runtime.previous_runtime._required_file_parts(sid)  # type: ignore[attr-defined]
+    return get_required_files_chunk_compat(session_id)
 
 
 @app.get(REQUIRED_FILES_BUNDLE_PATH, operation_id="getRequiredFilesBundle")

@@ -232,46 +232,14 @@ def scene_character_ids(current: dict[str, Any] | None = None, future: dict[str,
     return _unique(ids)
 
 
-PAST_CONTEXT_TRIGGERS = {
-    "past", "hidden", "memory", "samuel", "ring", "scar", "laboratory",
-    "echo", "kairos", "child", "pregnancy", "akira_raiden", "self_block",
-    "прошл", "памят", "самуэль", "кольц", "шрам", "лаборатор",
-    "эхо", "кайрос", "реб", "беремен", "самоблок",
-}
-
-
-def _context_needs_past(current: dict[str, Any] | None = None, future: dict[str, Any] | None = None) -> bool:
-    current = current or {}
-    future = future or {}
-    explicit = current.get("include_past_context") or current.get("load_past_context") or future.get("include_past_context")
-    if explicit is not None:
-        return bool(explicit)
-    haystack = json.dumps(
-        {
-            "scene_focus": current.get("scene_focus"),
-            "current_scene_goal": current.get("current_scene_goal"),
-            "open_threads": current.get("open_threads"),
-            "focus_tags": current.get("focus_tags"),
-            "calendar_triggers": current.get("calendar_triggers"),
-            "locks": future.get("locks"),
-        },
-        ensure_ascii=False,
-        default=str,
-    ).lower()
-    return any(trigger in haystack for trigger in PAST_CONTEXT_TRIGGERS)
-
-
-def character_files_for_context(cid: str, *, include_past: bool = False) -> list[str]:
+def character_files_for_context(cid: str, *, include_past: bool = True) -> list[str]:
     folder = known_character_folder(cid)
     if not folder:
         return []
-    candidates = [
-        f"characters/{folder}/main.yaml",
-        f"characters/{folder}/character.yaml",
-        f"characters/{folder}/knowledge.yaml",
-    ]
+    candidates = [f"characters/{folder}/character.yaml"]
     if include_past:
         candidates.append(f"characters/{folder}/past.yaml")
+    candidates.append(f"characters/{folder}/main.yaml")
     return [path for path in candidates if base.repo_file_exists(path)]
 
 
@@ -289,7 +257,7 @@ def lean_recommended_files_for_context(current: dict[str, Any] | None = None, fu
         files.append("characters/character_id_index.md")
 
     for cid in chars:
-        files.extend(character_files_for_context(cid, include_past=_context_needs_past(current, future)))
+        files.extend(character_files_for_context(cid, include_past=True))
 
     return _unique(files)
 
@@ -472,7 +440,6 @@ def build_scene_context_digest(session_id: str) -> str:
         chars,
     )
     inventory = base.compact_if_large(base.read_json("state/inventory_state.json", session_id, default={}) or {}, 2200)
-    scene_continuity = base.compact_if_large(base.read_json("state/scene_continuity_state.json", session_id, default={}) or {}, 2200)
     academy_schedule = build_calendar_slice(current, {})
 
     rule_digest = {
@@ -487,7 +454,7 @@ def build_scene_context_digest(session_id: str) -> str:
         ],
         "state_write": [
             "Backend does not infer state from prose.",
-            "If relationships/story/knowledge/current_state/inventory/scene_continuity change, send explicit state payload to apply-turn-result.",
+            "If relationships/story/knowledge/current_state change, send explicit state payload to apply-turn-result.",
             "Roster lists are replacement fields, not append-only fields.",
         ],
     }
@@ -505,7 +472,6 @@ def build_scene_context_digest(session_id: str) -> str:
     text += _json_block("Story lines slice", story_lines, 7600)
     text += _json_block("Knowledge slice", knowledge, 5200)
     text += _json_block("Inventory slice", inventory, 2200)
-    text += _json_block("Scene continuity hidden slice", scene_continuity, 2200)
     text += _json_block("Calendar slice", academy_schedule, 2200)
     text += "\n## State update reminder\nIf scene changes roster, use current_state_changes with roster fields as full replacement lists.\n"
     return text
@@ -708,12 +674,8 @@ def get_required_files_chunk_safe(
     max_chars: int = 30000,
     max_items: int = 3,
 ):
-    return required_files_chunk_response_safe(
-        session_id,
-        chunk_index=chunk_index,
-        max_chars=max_chars,
-        max_items=max_items,
-    )
+    sid = base.safe_session_id(session_id)
+    return ccp.RequiredFilesChunkResponse(session_id=sid, required_files=[], chunk_index=0, chunks_total=0, has_more=False, next_chunk_index=None, loaded_files=[], missing_files=[], loaded_count=0, missing_count=0, total_loaded_parts=0)
 
 
 @app.get("/api/v1/sessions/{session_id}/required-files-bundle", response_model=ccp.RequiredFilesChunkResponse, operation_id="getRequiredFilesBundle")
@@ -723,12 +685,7 @@ def get_required_files_bundle_safe(
     max_chars: int = 30000,
     max_items: int = 3,
 ):
-    return required_files_chunk_response_safe(
-        session_id,
-        chunk_index=chunk_index,
-        max_chars=max_chars,
-        max_items=max_items,
-    )
+    return get_required_files_chunk_safe(session_id, chunk_index=chunk_index, max_chars=max_chars, max_items=max_items)
 
 
 _remove_routes("/api/v1/sessions/{session_id}/repair/scene-roster", {"POST"}, "repairSceneRoster")

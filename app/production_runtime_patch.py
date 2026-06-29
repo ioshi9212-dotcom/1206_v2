@@ -6,7 +6,6 @@ import app.start_scene_runtime_patch as start_runtime
 from app.start_scene_runtime_patch import app
 import app.character_registry_runtime_patch as character_registry  # noqa: F401
 import app.response_size_guard_runtime_patch as size_guard  # noqa: F401
-import app.bottom_block_compact_runtime_patch as bottom_block_compact  # noqa: F401
 import app.pov_switch_runtime_patch as pov_switch  # noqa: F401
 import app.state_persistence_runtime_patch as state_persistence  # noqa: F401
 import app.physical_continuity_runtime_patch as physical_continuity  # noqa: F401
@@ -37,7 +36,7 @@ try:
 except Exception:
     knowledge_state_runtime = None  # type: ignore[assignment]
 
-app.version = "0.3.134-npc-item-continuity-v1"
+app.version = "0.3.135-fast-only-no-chunk-loop-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -105,11 +104,8 @@ def _openapi() -> dict[str, Any]:
             "/health": {"get": {"operationId": "health", "summary": "Check API health and runtime version", "responses": {"200": _response("API health status", "HealthResponse")}}},
             "/api/v1/sessions": {"post": {"operationId": "createSession", "summary": "Create a new gameplay session", "requestBody": {"required": False, "content": {"application/json": {"schema": _object_schema({"session_id": {"type": "string"}, "title": {"type": "string"}, "reset": {"type": "boolean"}})}}}, "responses": {"200": _response("Created session", "SessionResponse")}}},
             "/api/v1/sessions/{session_id}/context": {"get": {"operationId": "getSessionContext", "summary": "Get compact session context", "parameters": [_session_path_param()], "responses": {"200": _response("Compact session context", "SizeGuardContextResponse")}}},
-            "/api/v1/sessions/{session_id}/turn-contract": {"get": {"operationId": "getSessionTurnContract", "summary": "Get compact turn contract. For normal turns, call getFastRenderContext next instead of loading every required-files chunk.", "parameters": [_session_path_param()], "responses": {"200": _response("Turn contract", "TurnContractWithPromptPreview")}}},
+            "/api/v1/sessions/{session_id}/turn-contract": {"get": {"operationId": "getSessionTurnContract", "summary": "Get compact turn contract. For normal turns, call getFastRenderContext next. Full required-files chunks are hidden from the action schema.", "parameters": [_session_path_param()], "responses": {"200": _response("Turn contract", "TurnContractWithPromptPreview")}}},
             "/api/v1/sessions/{session_id}/fast-render-context": {"get": {"operationId": "getFastRenderContext", "summary": "Get fast render context for normal gameplay: runtime digest + active character files + selected state slices without full chunk reload", "parameters": [_session_path_param()] + _fast_context_params(), "responses": {"200": _response("Fast render context", "FastRenderContextResponse")}}},
-            "/api/v1/sessions/{session_id}/required-files-manifest": {"get": {"operationId": "getRequiredFilesManifest", "summary": "Get light required files manifest without reading all contents. Prefer getFastRenderContext for normal gameplay.", "parameters": [_session_path_param()], "responses": {"200": _response("Required files manifest", "RequiredFilesManifestResponse")}}},
-            "/api/v1/sessions/{session_id}/required-files-chunk": {"get": {"operationId": "getRequiredFilesChunk", "summary": "Get one cached chunk of required file contents for full fallback/audit mode", "parameters": [_session_path_param()] + _chunk_params(), "responses": {"200": _response("Required files chunk", "RequiredFilesChunkResponse")}}},
-            "/api/v1/sessions/{session_id}/required-files-bundle": {"get": {"operationId": "getRequiredFilesBundle", "summary": "Backward-compatible cached required files chunk endpoint", "parameters": [_session_path_param()] + _chunk_params(), "responses": {"200": _response("Required files chunk", "RequiredFilesChunkResponse")}}},
             "/api/v1/sessions/{session_id}/scene-packet": {"get": {"operationId": "getScenePacket", "summary": "Get one compact scene packet", "parameters": [_session_path_param()], "responses": {"200": {"description": "Scene packet", "content": {"application/json": {"schema": _object_schema()}}}}}},
             "/api/v1/sessions/{session_id}/turn": {"post": {"operationId": "processTurn", "summary": "Return gameplay scene or compact scene packet", "parameters": [_session_path_param()], "requestBody": {"required": True, "content": {"application/json": {"schema": _object_schema({"player_input": {"type": "string"}, "mode": {"type": "string", "default": "play"}, "include_file_contents": {"type": "boolean", "default": False}, "state_patches": _object_schema()}, required=["player_input"])}}}, "responses": {"200": _response("Processed turn", "ProcessTurnResponse")}}},
             "/api/v1/sessions/{session_id}/apply-turn-result": {"post": {"operationId": "applyTurnResult", "summary": "Apply meaningful scene changes and fallback physical continuity from visible_scene_text", "parameters": [_session_path_param()], "requestBody": {"required": False, "content": {"application/json": {"schema": _object_schema({"turn_file": {"type": "string"}, "data": _object_schema(), "dry_run": {"type": "boolean", "default": False}, "visible_scene_text": {"type": "string"}})}}}, "responses": {"200": _response("Apply result", "ApplyTurnResultResponse")}}},
@@ -135,4 +131,4 @@ def openapi_actions() -> dict[str, Any]:
 
 app.openapi_schema = None
 app.openapi = _openapi  # type: ignore[method-assign]
-app.version = "0.3.134-npc-item-continuity-v1"
+app.version = "0.3.135-fast-only-no-chunk-loop-v1"

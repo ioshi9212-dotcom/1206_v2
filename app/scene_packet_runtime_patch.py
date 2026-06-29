@@ -210,7 +210,7 @@ def discover_character_sources() -> tuple[dict[str, str], dict[str, list[str]]]:
     id_to_files: dict[str, list[str]] = {}
 
     for chars_root in _character_roots():
-        # New folder layout: characters/<id>/{main.yaml,character.yaml,knowledge.yaml}; past.yaml by trigger only
+        # New folder layout: characters/<id>/{character.yaml,main.yaml,past.yaml}
         try:
             children = sorted([p for p in chars_root.iterdir() if p.is_dir()], key=lambda p: p.name)
         except Exception:
@@ -222,12 +222,10 @@ def discover_character_sources() -> tuple[dict[str, str], dict[str, list[str]]]:
                 continue
 
             candidates = [
-                folder / "main.yaml",
-                folder / "main.yml",
                 folder / "character.yaml",
                 folder / "character.yml",
-                folder / "knowledge.yaml",
-                folder / "knowledge.yml",
+                folder / "main.yaml",
+                folder / "main.yml",
                 folder / "profile.yaml",
                 folder / "profile.yml",
                 folder / "past.yaml",
@@ -245,7 +243,7 @@ def discover_character_sources() -> tuple[dict[str, str], dict[str, list[str]]]:
                 continue
 
             rel_files: list[str] = []
-            # Keep order: core files first, past after and only when requested.
+            # Keep order: core/profile first, past after.
             for p in candidates:
                 if p.exists() and p.is_file():
                     rel_files.append(str(p.relative_to(chars_root.parent)).replace("\\", "/"))
@@ -296,9 +294,9 @@ def _character_maps() -> tuple[dict[str, str], dict[str, list[str]]]:
                 if key and canonical and canonical not in id_to_files:
                     # Only map old Academy fallback if the actual folder exists in repo/data.
                     probe_files = [
-                        f"characters/{canonical}/main.yaml",
                         f"characters/{canonical}/character.yaml",
-                        f"characters/{canonical}/knowledge.yaml",
+                        f"characters/{canonical}/main.yaml",
+                        f"characters/{canonical}/past.yaml",
                     ]
                     existing = [p for p in probe_files if base.repo_file_exists(p)]
                     if existing:
@@ -335,36 +333,7 @@ def is_known_character_id_dynamic(cid: str) -> bool:
     return bool(known_character_folder_dynamic(cid))
 
 
-PAST_CONTEXT_TRIGGERS = {
-    "past", "hidden", "memory", "samuel", "ring", "scar", "laboratory",
-    "echo", "kairos", "child", "pregnancy", "akira_raiden", "self_block",
-    "прошл", "памят", "самуэль", "кольц", "шрам", "лаборатор",
-    "эхо", "кайрос", "реб", "беремен", "самоблок",
-}
-
-
-def _scene_needs_past(current: dict[str, Any] | None = None, future: dict[str, Any] | None = None) -> bool:
-    current = current or {}
-    future = future or {}
-    explicit = current.get("include_past_context") or current.get("load_past_context") or future.get("include_past_context")
-    if explicit is not None:
-        return bool(explicit)
-    haystack = json.dumps(
-        {
-            "scene_focus": current.get("scene_focus"),
-            "current_scene_goal": current.get("current_scene_goal"),
-            "open_threads": current.get("open_threads"),
-            "focus_tags": current.get("focus_tags"),
-            "calendar_triggers": current.get("calendar_triggers"),
-            "locks": future.get("locks"),
-        },
-        ensure_ascii=False,
-        default=str,
-    ).lower()
-    return any(trigger in haystack for trigger in PAST_CONTEXT_TRIGGERS)
-
-
-def character_files_for_context_dynamic(cid: str, *, include_past: bool = False) -> list[str]:
+def character_files_for_context_dynamic(cid: str, *, include_past: bool = True) -> list[str]:
     canonical = canonical_character_id(cid)
     if not canonical:
         return []
@@ -376,7 +345,7 @@ def character_files_for_context_dynamic(cid: str, *, include_past: bool = False)
 
 
 def character_file_dynamic(cid: str) -> str:
-    files = character_files_for_context_dynamic(cid, include_past=False)
+    files = character_files_for_context_dynamic(cid, include_past=True)
     if files:
         return files[0]
     return f"characters/{_safe_alias(cid)}/character.yaml"
@@ -444,7 +413,7 @@ def recommended_files_for_context_dynamic(current: dict[str, Any] | None = None,
             files.append(path)
 
     for cid in scene_chars:
-        files.extend(character_files_for_context_dynamic(cid, include_past=_scene_needs_past(current, future)))
+        files.extend(character_files_for_context_dynamic(cid, include_past=True))
 
     # Let the existing lore module add its selected canon_lore files through the digest.
     # Add the index if present so GPT can see lore routing rules directly too.
@@ -473,7 +442,7 @@ def _patch_character_runtime() -> None:
         except Exception:
             pass
         for name, fn in [
-            ("character_files_for", lambda cid: character_files_for_context_dynamic(cid, include_past=False)),
+            ("character_files_for", lambda cid: character_files_for_context_dynamic(cid, include_past=True)),
             ("character_file", character_file_dynamic),
             ("active_scene_characters", scene_character_ids_dynamic),
             ("recommended_files_for_context", recommended_files_for_context_dynamic),
@@ -503,7 +472,7 @@ def _patch_character_runtime() -> None:
 
     for name, fn in [
         ("character_file", character_file_dynamic),
-        ("character_files_for", lambda cid: character_files_for_context_dynamic(cid, include_past=False)),
+        ("character_files_for", lambda cid: character_files_for_context_dynamic(cid, include_past=True)),
         ("active_scene_characters", scene_character_ids_dynamic),
         ("recommended_files_for_context", recommended_files_for_context_dynamic),
         ("base_recommended_files", lambda: recommended_files_for_context_dynamic({"active_characters": ["akira"]}, {})),
@@ -628,7 +597,6 @@ def get_scene_packet(
     knowledge_state = _read_json_state(sid, "state/knowledge_state.json", {}) or {}
     relationships = _read_json_state(sid, "state/relationships.json", {}) or {}
     inventory_state = _read_json_state(sid, "state/inventory_state.json", {}) or {}
-    scene_continuity_state = _read_json_state(sid, "state/scene_continuity_state.json", {}) or {}
     future_locks = _read_json_state(sid, "state/future_locks_progress.json", {}) or {}
     calendar_runtime = _read_json_state(sid, "state/calendar_runtime.json", {}) or {}
 
@@ -657,7 +625,7 @@ def get_scene_packet(
         "packet_version": "1206v2_scene_packet_v2_dynamic_characters",
         "session_id": sid,
         "runtime_version": app.version,
-        "usage_rule": "Use this packet before rendering. If packet_truncated=true or required lore/character info is missing, call getRequiredFilesManifest/getRequiredFilesChunk before scene output.",
+        "usage_rule": "Use this packet before rendering. If packet_truncated=true or required lore/character info is missing, call getFastRenderContext before scene output; do not start chunk loops.",
         "character_loading": {
             "mode": "dynamic_from_characters_folder",
             "scene_character_ids": scene_character_ids,
@@ -675,7 +643,6 @@ def get_scene_packet(
             "relationships": _compact(relationships, 9000),
             "knowledge_state": _compact(knowledge_state, 9000),
             "inventory_state": _compact(inventory_state, 5000),
-            "scene_continuity_state": _compact(scene_continuity_state, 5000),
             "future_locks_progress": _compact(future_locks, 6000),
             "calendar_runtime": _compact(calendar_runtime, 5000),
         },
@@ -686,8 +653,8 @@ def get_scene_packet(
         "packet_truncated": packet_truncated,
         "fallback_actions_if_needed": [
             "getSessionTurnContract",
-            "getRequiredFilesManifest",
-            "getRequiredFilesChunk",
+            "getFastRenderContext",
+            
             "getProjectFileByQuery",
         ],
         "hard_rules": [
@@ -696,7 +663,6 @@ def get_scene_packet(
             "Use loaded 1206 character files, relationship state, knowledge state, lore slice, calendar/runtime and current_state before NPC reactions.",
             "Hidden lore is not NPC knowledge unless revealed in-scene with source.",
             "After meaningful scene, save explicit state changes through applyTurnResult/applyTurnResultSimple.",
-            "NPC injuries and object holders must persist in scene_continuity_state/inventory_state, not in Akira's visible header unless currently visible.",
         ],
     }
 

@@ -125,8 +125,7 @@ class RequiredFilesManifestResponse(BaseModel):
     default_chunk_items: int = DEFAULT_CHUNK_ITEMS
     chunks_total: int = 0
     usage_note: str = (
-        "Call getRequiredFilesManifest after getSessionTurnContract, then call "
-        "getRequiredFilesChunk with chunk_index=0..chunks_total-1 before rendering gameplay."
+        "Normal gameplay should use getFastRenderContext. Required file chunks are diagnostic-only."
     )
 
 
@@ -143,8 +142,7 @@ class RequiredFilesChunkResponse(BaseModel):
     missing_count: int = 0
     total_loaded_parts: int = 0
     usage_note: str = (
-        "This is a size-limited chunk of required file contents. "
-        "If has_more=true, call getRequiredFilesChunk again with next_chunk_index."
+        "Diagnostic chunk response only. Normal gameplay must use getFastRenderContext and must not loop chunks."
     )
 
 
@@ -368,8 +366,8 @@ def session_turn_contract_with_prompt_preview(session_id: str) -> TurnContractWi
 
     checks = list(data.get("required_checks_before_answer", []) or [])
     for check in [
-        "After getSessionTurnContract and before any gameplay scene, call getRequiredFilesManifest and then getRequiredFilesChunk for every chunk until has_more=false.",
-        "Do not render a gameplay scene from only main.yaml files when required_files includes character.yaml, past.yaml, locks or state files; load all required-file chunks first.",
+        "After getSessionTurnContract and before any gameplay scene, call getFastRenderContext for normal gameplay.",
+        "Do not call required-files manifest/chunk unless doing explicit manual diagnostics outside gameplay.",
         "Follow prompt_preview as the render brief for this turn.",
         "In play mode, never show session/status/API/context summary; output only the scene.",
         "Do not ask permission to render/start/continue after the user has given a play command.",

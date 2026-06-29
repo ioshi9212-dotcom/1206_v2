@@ -50,7 +50,6 @@ FAST_ALWAYS_FILES = {
     "gpt/scene_format.md",
     "state/current_state.json",
     "state/calendar_runtime.json",
-    "state/scene_continuity_state.json",
 }
 
 FAST_STATE_SLICES = {
@@ -422,38 +421,47 @@ _remove_routes(FAST_CONTEXT_PATH, {"GET"}, "getFastRenderContext")
 def get_session_turn_contract_fast_hint(session_id: str) -> dict[str, Any]:
     sid = _safe_session_id(session_id)
     base.ensure_session(sid)
+    current = _read_json("state/current_state.json", sid, {})
+    future = _read_json("state/future_locks_progress.json", sid, {})
+    all_required_files, _current, _future = _required_files_for_session(sid)
+    fast_file_hints = [path for path in all_required_files if _is_fast_context_file(path, current, include_past=None)]
+
     if _ORIGINAL_TURN_CONTRACT is not None:
         try:
             data = _to_plain(_ORIGINAL_TURN_CONTRACT(sid))
         except Exception as exc:
             data = {"session_id": sid, "error": str(exc)}
     else:
-        current = _read_json("state/current_state.json", sid, {})
-        future = _read_json("state/future_locks_progress.json", sid, {})
-        files, _current, _future = _required_files_for_session(sid)
         data = {
             "session_id": sid,
             "active_character_ids": current.get("active_characters", []) or current.get("active_character_ids", []),
             "nearby_character_ids": current.get("nearby_characters", []) or current.get("nearby_character_ids", []),
-            "required_files": files,
             "future_locks_progress": future,
         }
 
+    # IMPORTANT: do not expose the full required file list as a to-do list.
+    # The model was treating it as an instruction to call every chunk and could
+    # spend many minutes "talking to the repo". getFastRenderContext is the only
+    # normal-turn loader; full chunks are hidden/diagnostic fallback.
+    data["required_files"] = []
+    data["fast_context_file_hints"] = fast_file_hints[:24]
+    data["full_required_files_count"] = len(all_required_files)
     data["fast_context_available"] = True
     data["preferred_next_action"] = "getFastRenderContext"
     data["required_checks_before_answer"] = [
-        "For normal gameplay, call getFastRenderContext next and render from it.",
-        "Do NOT call all getRequiredFilesChunk chunks unless fast_context says needs_full_context=true or the scene is a major lore/past/reveal scene.",
-        "Use manifest/chunks only as fallback or full-audit mode.",
+        "Call getFastRenderContext next for normal gameplay and render from it.",
+        "Do not call required-files manifest/chunk in normal gameplay.",
+        "Use full file chunks only during explicit diagnostics or manual audit, not during scene rendering.",
     ]
     data["prompt_preview"] = (
-        "PLAY MODE 1206 FAST BRIEF\n"
+        "PLAY MODE 1206 FAST ONLY BRIEF\n"
         "- Call getFastRenderContext for this session_id before rendering normal gameplay.\n"
-        "- Render from fast context: runtime digest + active character files + state/knowledge/relationship slices.\n"
-        "- Do not load every required-files chunk on ordinary movement/dialogue turns.\n"
-        "- Load full manifest/chunks only for major memory, hidden lore, new character, combat, contradiction, or if fast context reports missing critical context.\n"
+        "- Render from fast context: runtime digest + active character files + compact state slices.\n"
+        "- Do not call required-files manifest/chunk for ordinary movement, dialogue, medical checks, or scene continuation.\n"
+        "- If context is missing, continue from the fast context and visible state; ask for full audit only outside gameplay.\n"
         "- Preserve character fidelity and output the gameplay scene only.\n"
     )
+    data["usage_note"] = "Normal gameplay uses getFastRenderContext only. Full chunks are diagnostic-only and hidden from the action schema."
     return data
 
 
@@ -461,23 +469,20 @@ def get_session_turn_contract_fast_hint(session_id: str) -> dict[str, Any]:
 def get_required_files_manifest_light(session_id: str) -> dict[str, Any]:
     sid = _safe_session_id(session_id)
     base.ensure_session(sid)
-    required_files, _current, _future = _required_files_for_session(sid)
-    files = [_light_manifest_item(path, sid) for path in required_files]
-    loaded_count = len([item for item in files if item.get("exists")])
-    missing_files = [item["path"] for item in files if not item.get("exists")]
-    total_parts_estimate = sum(int(item.get("parts_total") or 0) for item in files)
+    # Diagnostic endpoint kept for backward compatibility only. It intentionally
+    # does not return a chunk plan, so the model cannot enter a long loading loop.
     return {
         "session_id": sid,
-        "mode": "light_manifest_no_content_read",
+        "mode": "diagnostic_disabled_for_normal_gameplay",
         "cache_enabled": True,
-        "required_files": required_files,
-        "files": files,
-        "missing_files": missing_files,
-        "loaded_count": loaded_count,
-        "missing_count": len(missing_files),
-        "total_parts": total_parts_estimate,
-        "chunks_total": max(1, (total_parts_estimate + DEFAULT_CHUNK_ITEMS - 1) // DEFAULT_CHUNK_ITEMS) if total_parts_estimate else 0,
-        "usage_note": "Manifest is intentionally light. For normal gameplay prefer getFastRenderContext. For full fallback call getRequiredFilesChunk until has_more=false; chunks are cached per unchanged state/files.",
+        "required_files": [],
+        "files": [],
+        "missing_files": [],
+        "loaded_count": 0,
+        "missing_count": 0,
+        "total_parts": 0,
+        "chunks_total": 0,
+        "usage_note": "Use getFastRenderContext. Full manifest/chunk loading is disabled for normal gameplay.",
     }
 
 
@@ -487,9 +492,28 @@ def _required_files_chunk_cached_response(
     chunk_index: int = 0,
     max_chars: int = DEFAULT_CHUNK_CHARS,
     max_items: int = DEFAULT_CHUNK_ITEMS,
+    force_full_context: bool = False,
 ) -> dict[str, Any]:
     sid = _safe_session_id(session_id)
     base.ensure_session(sid)
+    if not force_full_context:
+        return {
+            "session_id": sid,
+            "mode": "full_chunks_disabled_for_normal_gameplay",
+            "cache_enabled": True,
+            "cache_hit": False,
+            "required_files": [],
+            "chunk_index": 0,
+            "chunks_total": 0,
+            "has_more": False,
+            "next_chunk_index": None,
+            "loaded_files": [],
+            "missing_files": [],
+            "loaded_count": 0,
+            "missing_count": 0,
+            "total_loaded_parts": 0,
+            "usage_note": "Use getFastRenderContext. Full chunks require explicit force_full_context=true diagnostic mode.",
+        }
     required_files, _current, _future = _required_files_for_session(sid)
     key = _cache_key(sid, required_files)
     cache_hit = key in _REQUIRED_BUNDLE_CACHE and time.time() - _REQUIRED_BUNDLE_CACHE[key].created_at <= CACHE_TTL_SECONDS
@@ -525,8 +549,9 @@ def get_required_files_chunk_cached(
     chunk_index: int = 0,
     max_chars: int = DEFAULT_CHUNK_CHARS,
     max_items: int = DEFAULT_CHUNK_ITEMS,
+    force_full_context: bool = False,
 ) -> dict[str, Any]:
-    return _required_files_chunk_cached_response(session_id, chunk_index=chunk_index, max_chars=max_chars, max_items=max_items)
+    return _required_files_chunk_cached_response(session_id, chunk_index=chunk_index, max_chars=max_chars, max_items=max_items, force_full_context=force_full_context)
 
 
 @app.get(BUNDLE_PATH, operation_id="getRequiredFilesBundle")
@@ -535,8 +560,9 @@ def get_required_files_bundle_cached(
     chunk_index: int = 0,
     max_chars: int = DEFAULT_CHUNK_CHARS,
     max_items: int = DEFAULT_CHUNK_ITEMS,
+    force_full_context: bool = False,
 ) -> dict[str, Any]:
-    return _required_files_chunk_cached_response(session_id, chunk_index=chunk_index, max_chars=max_chars, max_items=max_items)
+    return _required_files_chunk_cached_response(session_id, chunk_index=chunk_index, max_chars=max_chars, max_items=max_items, force_full_context=force_full_context)
 
 
 @app.get(FAST_CONTEXT_PATH, operation_id="getFastRenderContext")
@@ -580,7 +606,7 @@ def get_fast_render_context(
                 "contradiction in character behavior",
                 "needs_full_context=true",
             ],
-            "actions": ["getRequiredFilesManifest", "getRequiredFilesChunk"],
+            "action": "stop gameplay and request manual diagnostic outside the scene; do not start required-file chunk loops during gameplay",
         },
         "render_rules": [
             "Use fast context as sufficient for ordinary gameplay turns.",
@@ -592,6 +618,6 @@ def get_fast_render_context(
 
 
 try:
-    app.version = "0.3.121-fast-context-cache-v1"
+    app.version = "0.3.135-fast-only-no-chunk-loop-v1"
 except Exception:
     pass
