@@ -20,15 +20,11 @@ Call:
 
 Then call:
 
-`getRequiredFilesManifest(session_id, user_input, mode="play")`
+`getFastRenderContext(session_id, user_input, mode="play")`
 
-Then call:
+Do **not** call diagnostic file chunks in normal gameplay.
 
-`getRequiredFilesChunk(session_id, chunk_index=0, max_chars=60000, max_items=6, user_input, mode="play")`
-
-Repeat with `next_chunk_index` until `has_more=false`.
-
-Only after that generate scene.
+Only after `getFastRenderContext` generate scene.
 
 Then save:
 
@@ -51,6 +47,6 @@ If scene includes hidden memory, past, rings, scars, reincarnation, Samуэль,
 ## Do not
 
 - Do not generate from chat memory if API failed.
-- Do not load the whole repo without required_files.
+- Do not load the whole repo during gameplay; use fast context.
 - Do not reveal hidden lore only because hidden file was loaded.
 - Do not overwrite player control of Akira.

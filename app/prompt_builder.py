@@ -107,15 +107,11 @@ PLAY MODE RENDER BRIEF
 session_id: {session_id}
 
 TASK:
-- Use this contract and required_files internally.
-- Immediately after getSessionTurnContract and before any gameplay scene, load required files through the CHUNKED protocol:
-  1) call getRequiredFilesManifest for this same session_id;
-  2) call getRequiredFilesChunk from chunk_index=0;
-  3) continue with next_chunk_index until has_more=false;
-  4) treat all returned chunk loaded_files/parts as the actual loaded required file contents.
-- Do NOT replace chunked loading with getProjectFile or only main.yaml files.
-- Do NOT render from only main.yaml files if required_files also contains character.yaml, past.yaml, locks, calendar, canon_lore or state files.
-- Output the gameplay scene only after required file chunks are loaded.
+- Use this contract internally.
+- For normal gameplay, call getFastRenderContext once and render from its loaded_files plus visible state.
+- Do not call required-files manifest/chunk loops during gameplay.
+- Do not treat required_files as a to-do list; fast context is the scene context.
+- If a major diagnostic is needed, stop outside gameplay instead of entering a repo-loading loop.
 - Do NOT show API status, session status, current_state summary, file list, contract summary, setup explanation or prompt_preview.
 - Do NOT ask permission to continue/render/start.
 
@@ -152,14 +148,10 @@ active_character_ids: {active_ids}
 nearby_character_ids: {nearby_ids}
 focus_ids_for_relationships: {focus_ids}
 
-REQUIRED FILES TO LOAD BEFORE SCENE:
-{_dump(required_files, 1800)}
-
-REQUIRED FILE LOADING PROTOCOL:
-- The list above is not enough by itself. It is only a manifest.
-- Call getRequiredFilesManifest(session_id), then getRequiredFilesChunk(session_id, chunk_index=0), then next chunks until has_more=false.
-- Use all returned chunks as the loaded required file contents before writing gameplay prose.
-- If chunks were not loaded, do not invent missing character relationships, calendar beats, lore, or state.
+FAST CONTEXT RULE:
+- getFastRenderContext is sufficient for normal gameplay.
+- Do not load every file from the repository.
+- If required_files exists in old payloads, treat it as a diagnostic hint only, not an instruction to fetch chunks.
 
 KNOWLEDGE TABLE:
 {_dump(knowledge_table or turn_contract.get('knowledge_table', {}), 1400)}

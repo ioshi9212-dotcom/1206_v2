@@ -45,30 +45,27 @@ VOICE_IDENTITY_MAP = {
 START_CHARACTER_IDS = ["akira", "jun", "irey", "emma"]
 CONDITIONAL_CHARACTER_IDS = ["raiden", "ray"]
 
-# Active 1206 v2 unified character-card standard.
-# Legacy files like *_main_profile.yaml / *_hidden_past.yaml are intentionally
-# not referenced here. They may remain in the repository until cleanup, but the
-# runtime should load the new split card files.
 START_CHARACTER_FILES: dict[str, list[str]] = {
     "akira": [
-        "characters/akira/main.yaml",
-        "characters/akira/character.yaml",
-        "characters/akira/knowledge.yaml",
+        "characters/akira/akira_main_profile.yaml",
+        "characters/akira/akira_knowledge_connections.yaml",
+        "characters/akira/akira_hidden_past.yaml",
+        "characters/akira/akira_thought_triggers.yaml",
     ],
     "jun": [
-        "characters/jun/main.yaml",
-        "characters/jun/character.yaml",
-        "characters/jun/knowledge.yaml",
+        "characters/jun/jun_main_profile.yaml",
+        "characters/jun/jun_knowledge_connections.yaml",
+        "characters/jun/jun_hidden_past.yaml",
     ],
     "irey": [
-        "characters/irey/main.yaml",
-        "characters/irey/character.yaml",
-        "characters/irey/knowledge.yaml",
+        "characters/irey/irey_main_profile.yaml",
+        "characters/irey/irey_knowledge_connections.yaml",
+        "characters/irey/irey_hidden_past.yaml",
     ],
     "emma": [
-        "characters/emma/main.yaml",
-        "characters/emma/character.yaml",
-        "characters/emma/knowledge.yaml",
+        "characters/emma/emma_main_profile.yaml",
+        "characters/emma/emma_knowledge_connections.yaml",
+        "characters/emma/emma_hidden_past.yaml",
     ],
 }
 
@@ -336,7 +333,7 @@ def _attach_start_scene_context(packet: dict[str, Any], session_id: str) -> dict
         "If user starts a new game with 'начнем/начнём/старт/start', create a session and output initial_scene.exact_text verbatim.",
         "For the first start_scene output, do not rewrite, shorten, expand or continue the exact text.",
         "Hidden runtime map: 'Женский голос снизу' is emma; 'Незнакомый мужской голос' is irey. Do not reveal those names in Akira POV before in-scene reveal.",
-        "For start_scene, load/read Akira, Jun, Irey and Emma unified character files and goals before NPC reactions.",
+        "For start_scene, load/read Akira, Jun, Irey and Emma character files and goals before NPC reactions.",
     ]:
         if rule not in hard_rules:
             hard_rules.append(rule)
@@ -404,7 +401,7 @@ def _strip_inline_file_contents(packet: dict[str, Any]) -> dict[str, Any]:
     """Keep scene packet metadata but remove large inline file bodies.
 
     After the exact first scene is delivered, processTurn should not return
-    loaded file contents. The gameplay client must use required-files-chunk for
+    loaded file contents. The gameplay client must use diagnostic-files-chunk for
     file contents; otherwise Action responses exceed the platform size limit.
     """
     if not isinstance(packet, dict):
@@ -430,7 +427,7 @@ def _strip_inline_file_contents(packet: dict[str, Any]) -> dict[str, Any]:
             initial["exact_text"] = ""
         compact["initial_scene"] = initial
     compact["content_mode"] = "metadata_only_after_first_scene"
-    compact["load_instruction"] = "Use required-files-manifest/chunk for file contents. processTurn scene_packet intentionally omits contents after start scene."
+    compact["load_instruction"] = "Use fast-render-context for file contents. processTurn scene_packet intentionally omits contents after start scene."
     return compact
 
 
@@ -511,7 +508,7 @@ def process_turn(session_id: str, req: ProcessTurnRequest) -> dict[str, Any]:
         "status": "SCENE_PACKET_RETURNED_COMPACT",
         "scene_text": "",
         "scene_packet": packet,
-        "usage_note": "Compact response. If file contents are needed, call required-files-manifest/chunk; do not request full scene_packet contents on normal turns.",
+        "usage_note": "Compact response. If file contents are needed, call fast-render-context; do not request full scene_packet contents on normal turns.",
     }
 
 

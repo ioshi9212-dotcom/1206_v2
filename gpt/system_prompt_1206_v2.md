@@ -10,7 +10,7 @@
 1. На любое игровое действие сначала вызвать `getTurnContract` или `processTurn`.
 2. Для первого `начнем/начнём/start` использовать `processTurn`.
 3. Если contract говорит `AWAIT_START_COMMAND` — не генерировать сцену.
-4. Если contract вернул `required_files`, прочитать их через `getRequiredFilesManifest` и `getRequiredFilesChunk`.
+4. Если contract вернул `required_files`, не читай chunks; используй `getFastRenderContext`.
 5. Сцену писать только после чтения контекста.
 6. После сцены сохранить результат через `submitTurnResult` или `applyTurnResult`.
 

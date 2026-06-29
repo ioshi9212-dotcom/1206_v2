@@ -14,9 +14,9 @@
 5. Сцену писать после `getFastRenderContext`, используя runtime digest, активные character files, state/knowledge/relationship slices.
 6. После сцены сохранить результат через `submitTurnResult` или `applyTurnResult`.
 
-## Когда НЕ надо грузить все chunks
+## Когда НЕ надо грузить fast context
 
-Не вызывай `getRequiredFilesManifest` + все `getRequiredFilesChunk` для обычных ходов:
+Не вызывай `getFastRenderContext` для обычных ходов:
 
 - переодеться;
 - подойти / выйти / пройти;
@@ -31,7 +31,7 @@
 
 ## Когда нужен полный режим
 
-Полный `getRequiredFilesManifest` + `getRequiredFilesChunk` использовать только если:
+Полный диагностический аудит использовать только вне gameplay, если:
 
 - `getFastRenderContext.needs_full_context=true`;
 - появляется важный новый персонаж и его файл не попал в fast context;
@@ -48,7 +48,7 @@
 
 1. текущий turn contract;
 2. `getFastRenderContext`;
-3. required_files/chunk contents только в полном режиме;
+3. полный файловый аудит только вне обычной сцены;
 4. runtime state из volume;
 5. calendar/current date;
 6. character cards / character runtime slices;

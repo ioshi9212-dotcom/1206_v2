@@ -54,9 +54,7 @@ def manifest_any_post(session_id: str, body: dict[str, Any] | None = Body(defaul
 
 def chunk_any(session_id: str, chunk_index: int = 0, max_chars: int = 12000, max_items: int = 1) -> Any:
     sid = _sid(session_id)
-    if compat.ccp is not None and hasattr(compat.ccp, "get_required_files_chunk"):
-        return compat.ccp.get_required_files_chunk(sid, chunk_index=chunk_index, max_chars=max_chars, max_items=max_items)
-    return {"session_id": sid, "chunk_index": chunk_index, "chunks_total": 0, "has_more": False, "next_chunk_index": None, "loaded_files": [], "missing_files": []}
+    return {"session_id": sid, "mode": "full_chunks_disabled_for_normal_gameplay", "chunk_index": 0, "chunks_total": 0, "has_more": False, "next_chunk_index": None, "loaded_files": [], "missing_files": [], "required_files": []}
 
 
 def chunk_any_post(session_id: str, body: dict[str, Any] | None = Body(default=None)) -> Any:

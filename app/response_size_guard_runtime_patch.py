@@ -30,7 +30,6 @@ LIGHT_STATE_FILES = [
     "state/calendar_runtime.json",
     "state/relationships.json",
     "state/inventory_state.json",
-    "state/scene_continuity_state.json",
     "state/power_state.json",
     "state/future_locks_progress.json",
     "state/session_npcs.json",
@@ -57,12 +56,12 @@ PAST_TRIGGER_WORDS = [
 CHARACTER_FOLDERS = {
     "akira": "akira", "char_akira": "akira",
     "jun": "jun", "jun_carter": "jun", "char_jun": "jun",
-    "ray": "ray", "ray_carter": "ray", "char_ray": "ray", "командующий": "ray", "командующий_рэй": "ray", "командующий_восточного_сектора": "ray", "старший_командир_базы": "ray",
-    "raiden": "raiden", "raiden_sterling": "raiden", "char_raiden": "raiden", "парень с пирсингом": "raiden", "парень_с_пирсингом": "raiden", "высокий_парень_у_мотоцикла": "raiden",
+    "ray": "ray", "ray_carter": "ray", "char_ray": "ray",
+    "raiden": "raiden", "raiden_sterling": "raiden", "char_raiden": "raiden", "парень с пирсингом": "raiden",
     "irey": "irey", "char_irey": "irey",
     "emma": "emma", "char_emma": "emma",
-    "yuna": "yuna", "yuna_gray": "yuna", "char_yuna": "yuna", "юна": "yuna", "медик": "yuna", "женщина_медик": "yuna", "девушка_в_халате": "yuna", "медик_восточной_базы": "yuna",
-    "miki": "miki", "miki_larsen": "miki", "char_miki": "miki", "мики": "miki", "светловолосая_девушка_из_7_го_отряда": "miki",
+    "yuna": "yuna", "yuna_gray": "yuna", "char_yuna": "yuna",
+    "miki": "miki", "miki_larsen": "miki", "char_miki": "miki",
     "haru": "haru", "haru_foster": "haru",
     "samuel": "samuel", "samuel_sterling": "samuel",
     "alex": "alex",
@@ -348,16 +347,11 @@ def _small_output_contract() -> dict[str, Any]:
             "Complete the player's declared action chain to the nearest meaningful response point.",
             "Do not stop for every step, turn, glance, pause, meter, or harmless route detail.",
             "Stop only for a real response point with stakes.",
-            "Player controls Akira; do not invent consequential Akira speech unless written outside parentheses.",
-            "Low-stakes service, medical or domestic micro-answers may be brief in Akira voice if they change no route, truth, trust, conflict, safety, access or relationship state.",
-            "Do not decide Akira's new independent choice: trusted, attacked, revealed, agreed, left for a new goal, changed route, disclosed truth or accepted a consequential risk.",
+            "Player controls only Akira; do not invent Akira speech unless written outside parentheses.",
+            "Do not decide Akira's new independent choice: answered, trusted, attacked, revealed, agreed, left for a new goal.",
             "Characters know only what they saw, heard, were told, have in their character knowledge state, or can infer from visible signs.",
             "Use visible_label/descriptor when Akira does not know the name.",
-                        "Bottom block hard limits: max 3 actions, max 3 possible Akira lines, max 3 Akira thoughts.",
-            "State block hard limit: max 3 compact lines; no new facts, no offscreen reports, no clothing/treatment recap, no long injury explanations, no NPC item ledger.",
-            "Track NPC injuries/limitations and object ownership in hidden state/scene_continuity/inventory_state, not in Akira's visible header or lower panel unless Akira currently sees it and it affects this beat.",
-            "Akira header inventory is a visible current slice only: do not show items that left Akira's possession, are hidden, or are held by NPCs; preserve those only in hidden state.",
-            "Relationship block hard limit: max 4 current-scene entries; one signed number plus 1-3 words only; no event recap or offscreen logistics.",
+            "Bottom block hard limits: max 3 actions, max 3 possible Akira lines, max 3 Akira thoughts.",
             "Bottom-block actions must have stakes; no micro-actions without consequence.",
             "Never mention pacing rules, compression, nodes, mechanics, structure, or directorial handling in visible prose.",
         ],
@@ -366,8 +360,8 @@ def _small_output_contract() -> dict[str, Any]:
 
 def _small_prompt_preview(chars: list[str], required_files: list[str]) -> str:
     return (
-        "PLAY MODE 1206 CLEAN BRIEF\n"
-        "- Load getRequiredFilesManifest, then all getRequiredFilesChunk chunks before rendering.\n"
+        "PLAY MODE 1206 FAST BRIEF\n"
+        "- Use getFastRenderContext for normal gameplay; do not load required file chunks.\n"
         "- Render visible gameplay scene only; no API/status/debug.\n"
         "- Story-scene pacing: complete declared action chains to the nearest meaningful response point.\n"
         "- Do not fragment ordinary movement into step-by-step choices.\n"
@@ -375,7 +369,7 @@ def _small_prompt_preview(chars: list[str], required_files: list[str]) -> str:
         "- Static knowledge: characters/<id>/knowledge.yaml. Dynamic memory: per-character state only.\n"
         "- Do not mention rules/mechanics/directorial wording in visible prose.\n"
         f"- Focus characters/internal ids: {', '.join(chars)}.\n"
-        f"- Required files count: {len(required_files)}.\n"
+        f"- Fast context file count hint: {len(required_files)}.\n"
     )
 
 
@@ -386,7 +380,7 @@ class SizeGuardContextResponse(BaseModel):
     active_character_ids: list[str] = Field(default_factory=list)
     nearby_character_ids: list[str] = Field(default_factory=list)
     required_files: list[str] = Field(default_factory=list)
-    usage_note: str = "Compact context only. Load manifest/chunks before rendering gameplay."
+    usage_note: str = "Compact context only. Use getFastRenderContext for normal gameplay."
 
 
 class TurnContractWithPromptPreview(BaseModel):
@@ -402,7 +396,7 @@ class TurnContractWithPromptPreview(BaseModel):
     relationship_context: dict[str, Any] = Field(default_factory=dict)
     story_context: dict[str, Any] = Field(default_factory=dict)
     prompt_preview: str = ""
-    usage_note: str = "Do not stop here. Load required file chunks."
+    usage_note: str = "Do not stop here. Call getFastRenderContext for normal gameplay."
 
 
 class RequiredFilesManifestItem(BaseModel):
@@ -539,7 +533,6 @@ def get_session_turn_contract_size_guard(session_id: str) -> TurnContractWithPro
     current = _safe_read_json("state/current_state.json", sid, {})
     future = _safe_read_json("state/future_locks_progress.json", sid, {})
     inventory = _safe_read_json("state/inventory_state.json", sid, {})
-    scene_continuity = _safe_read_json("state/scene_continuity_state.json", sid, {})
     relationships = _safe_read_json("state/relationships.json", sid, {})
     story_lines = _safe_read_json("state/story_lines.json", sid, {})
     chars = _scene_chars(current, future)
@@ -551,8 +544,8 @@ def get_session_turn_contract_size_guard(session_id: str) -> TurnContractWithPro
         required_files=files,
         output_format_contract=_small_output_contract(),
         required_checks_before_answer=[
-            "Call getRequiredFilesManifest next.",
-            "Then call getRequiredFilesChunk from chunk_index=0 until has_more=false.",
+            "Call getFastRenderContext next for normal gameplay.",
+            "Do not call required-files manifest/chunk in normal gameplay.",
             "Do not render gameplay from compact contract alone.",
         ],
         knowledge_table=_character_knowledge_state(sid, chars),
@@ -561,8 +554,6 @@ def get_session_turn_contract_size_guard(session_id: str) -> TurnContractWithPro
             "nearby_items": _compact(current.get("nearby_items", []), 1000),
             "current_outfit": _compact(current.get("current_outfit"), 1000),
             "akira_inventory_state": _compact((inventory.get("akira") or {}) if isinstance(inventory, dict) else {}, 1000),
-            "scene_object_and_npc_continuity_hidden": _compact(scene_continuity, 1200),
-            "visible_rule": "Header/lower panel shows only Akira-visible current slice. NPC-held, hidden, transferred or offscreen objects stay hidden in state.",
         },
         relationship_context=_relationship_slice(relationships, chars),
         story_context=_compact(story_lines, 1400) if isinstance(story_lines, dict) else {},
@@ -599,4 +590,4 @@ def get_required_files_bundle(session_id: str, chunk_index: int = 0, max_chars: 
 
 base.active_scene_characters = _scene_chars
 base.recommended_files_for_context = _recommended_files_for_context_size_guard
-app.version = "0.3.134-npc-item-continuity-v1"
+app.version = "0.3.135-fast-only-no-chunk-loop-v1"
