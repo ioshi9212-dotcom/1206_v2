@@ -1,34 +1,97 @@
-# Key Characters 1206 Loading Policy
+# Key Characters 1206 Loading Policy — unified standard
 
-## Always-load
+## Активный стандарт карточек
 
-Если персонаж присутствует в сцене, загружать его `*_main_profile.yaml`.
+Для ключевых персонажей 1206 v2 использовать только новый набор файлов:
 
-Для первой проверки сцены важны:
+```text
+characters/<id>/main.yaml
+characters/<id>/character.yaml
+characters/<id>/knowledge.yaml
+characters/<id>/past.yaml
+```
 
-- `characters/akira/akira_main_profile.yaml`
-- `characters/raiden/raiden_main_profile.yaml`
-- `characters/ray/ray_main_profile.yaml`
-- `characters/jun/jun_main_profile.yaml`
-- `characters/emma/emma_main_profile.yaml`
-- `characters/irey/irey_main_profile.yaml`
+Старые файлы `*_main_profile.yaml`, `*_hidden_past.yaml`, `*_knowledge_connections.yaml` считаются legacy-материалом. Их не удалять в рамках этой правки, но не указывать как рабочий стандарт загрузки.
 
-## Conditional-load
+## Always-load для присутствующих персонажей
 
-`*_hidden_past.yaml` грузить только если сцена касается прошлого, памяти, Самуэля, Райдена/Акиры, ребёнка, кольца, шрама, лаборатории, Эхо, кайросов, пространства между, срыва или самоблокировки.
+Если персонаж физически присутствует в сцене, говорит, наблюдает, является адресатом действия или стоит в active/nearby/current_state, грузить:
 
-`*_knowledge_connections.yaml` грузить, если в сцене есть несколько важных персонажей и нужен контроль того, кто что знает.
+- `characters/<id>/main.yaml`
+- `characters/<id>/character.yaml`
+- `characters/<id>/knowledge.yaml`
 
-## Без lock-файлов
+Для первой ночной сцены 31 августа 1206 важны:
 
-Старые lock-и и scattered rules не переносить отдельными файлами. Их смысл уже собран в обычные поля YAML: `knows`, `does_not_know`, `forbidden`, `allowed`, `pov_rules`, `rules`.
+- `characters/akira/main.yaml`
+- `characters/akira/character.yaml`
+- `characters/akira/knowledge.yaml`
+- `characters/jun/main.yaml`
+- `characters/jun/character.yaml`
+- `characters/jun/knowledge.yaml`
+- `characters/irey/main.yaml`
+- `characters/irey/character.yaml`
+- `characters/irey/knowledge.yaml`
+- `characters/emma/main.yaml`
+- `characters/emma/character.yaml`
+- `characters/emma/knowledge.yaml`
+
+Райден, Рэй, Юна, Мики и другие персонажи грузятся по current_state, scene roster, календарному условию или прямому появлению в сцене.
+
+## Conditional-load past.yaml
+
+`past.yaml` грузить только если сцена касается:
+
+- прошлого;
+- памяти;
+- Самуэля;
+- лаборатории;
+- Райдена/Акиры;
+- ребёнка/потери;
+- кольца;
+- шрама;
+- Эхо;
+- кайросов;
+- пространства между;
+- срыва;
+- самоблокировки;
+- скрытого происхождения;
+- старых связей, которые нельзя раскрывать автоматически.
+
+## Временные знания и планы
+
+Временные знания персонажа, текущая тактика, предположения и план конкретного дня не должны жить в постоянной карточке персонажа.
+
+Использовать:
+
+- `calendar/days/<date>.yaml` — давление дня, временные намерения, day beat;
+- `state/character_knowledge/<id>.json` — что персонаж узнал в сыгранных сценах;
+- `state/current_state.json` — кто активен, где находится, что видно сейчас;
+- `state/relationships.json` — изменившаяся динамика отношений;
+- `state/scene_continuity_state.json` — физическая непрерывность, травмы, предметы, положения.
+
+Пример: если Ирэй на 31 августа считает Восточный сектор риском, это временная установка дня. Если сцена показывает, что он остаётся в Восточном секторе или меняет мнение, обновлять state, а не переписывать его постоянную карточку.
+
+## Без scattered lock-файлов
+
+Старые lock-и и scattered rules не переносить отдельными файлами. Их смысл должен быть собран в обычные поля YAML:
+
+- `knows`
+- `does_not_know`
+- `forbidden`
+- `allowed`
+- `pov_rules`
+- `rules`
+- `load_only_if`
+- `temporary_knowledge_and_intent`
 
 ## Приоритет текущего канона
 
-Если старые репозитории противоречат текущим правкам пользователя, использовать текущие правки:
+Если старые репозитории, legacy-файлы или старые карточки противоречат текущим правкам пользователя, использовать текущие правки:
 
 - Акира сама заблокировала эмоции, поток и память.
 - Перегруз и потеря контроля не одно и то же.
 - 1198 — Академия, 1206 — спустя восемь лет.
 - Акира чистокровный кайрос, но выросла среди людей и не помнит этого на старте.
 - Райден после стирания не помнит Акиру/Картер и всё, что с ней связано.
+- Карточка персонажа описывает персонажа, а не календарный маршрут и не временный план дня.
