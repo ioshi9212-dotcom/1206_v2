@@ -31,8 +31,7 @@ CHARACTER_FOLDER_ALIASES: dict[str, str] = {
     "char_jun": "jun",
 
     "ray": "ray",
-    "ray_carter": "ray",
-    "char_ray": "ray",
+    "char_ray": "ray",  # legacy technical alias only; never a visible surname/name source
 
     "raiden": "raiden",
     "raiden_sterling": "raiden",
