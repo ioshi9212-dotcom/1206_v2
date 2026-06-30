@@ -1,26 +1,12 @@
 energy_runtime_digest:
-  version: energy_runtime_digest_v1
-  rule: "Energy is an active world layer. Humans/kairos with energy are not rendered as ordinary physical-only people when their energy packet is loaded."
-  gameplay_use:
-    - "Energy can affect combat, movement, pressure, defense, perception, restraint, pursuit and escape."
-    - "Characters do not use energy every second, but it must remain an available behavior option when danger, pursuit, defense or control logically calls for it."
-    - "Do not invent new powers: use only character packets and loaded canon/state."
+  purpose: "Small always-loaded world rule for energy-aware rendering."
+  rule: "Energy is an active world layer for humans/kairos and can affect combat, movement, pressure, defense, perception and restraint."
+  use_rule: "Characters do not use energy every second, but renderer must keep it available when pressure, danger, pursuit, restraint or defense logically calls for it."
   known_profiles:
-    akira:
-      energy: "space"
-      current_1206_rule: "access is closed/blocked unless scene/context unlocks it"
-    emma:
-      energy: "water/moisture/liquid pressure"
-      operational_use: "pressure, restraint, compression, environment moisture manipulation"
-      limits: "needs moisture/source/medium/concentration; dry cold/wind/spatial disturbance can interfere"
-    irey:
-      energy: "space + spatial-sensory link"
-      operational_use: "space control, movement/positioning, sensory anchor by intentional touch"
-      limits: "not mind-reading; quality depends on distance and time after anchor"
-    raiden:
-      energy: "cold + air"
-      operational_use: "cold leak, air pressure/cuts/defense, reflexive environmental effect under threat"
-      limits: "does not restore erased memory by itself"
-  renderer_rule:
-    - "If active/nearby character has an energy section, consider it in scene reaction."
-    - "If an energy-capable character's energy section is missing from the packet, stop gameplay and report incomplete context."
+    akira: "space; in 1206 access is blocked/closed unless scene unlocks it"
+    emma: "water / moisture / liquid pressure"
+    irey: "space + spatial-sensory link; intentional touch creates an anchor; contact is not required forever; anchor lasts about a day then weakens"
+    raiden: "cold + air"
+  forbidden:
+    - "Do not render energy-capable characters as ordinary humans if their energy packet is loaded."
+    - "Do not invent new abilities beyond character packets."
