@@ -78,7 +78,15 @@ try:
 except Exception:
     compact_scene_contract = None  # type: ignore[assignment]
 
-app.version = "0.3.149-academy-style-scene-contract-v1"
+# Final gameplay contract override: compact scene contract + memory-retention slice.
+# This keeps Actions response size controlled while preserving recent session facts,
+# dynamic NPC knowledge, relationships and scene continuity.
+try:
+    import app.scene_memory_contract_runtime_patch as scene_memory_contract  # noqa: F401
+except Exception:
+    scene_memory_contract = None  # type: ignore[assignment]
+
+app.version = "0.3.150-memory-safe-scene-contract-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -164,7 +172,7 @@ def _session_path_param() -> dict:
 
 def _scene_contract_params() -> list[dict]:
     return [
-        {"name": "max_total_chars", "in": "query", "required": False, "schema": {"type": "integer", "default": 9000, "minimum": 6000, "maximum": 14000}},
+        {"name": "max_total_chars", "in": "query", "required": False, "schema": {"type": "integer", "default": 12000, "minimum": 9000, "maximum": 18000}},
         {"name": "include_debug", "in": "query", "required": False, "schema": {"type": "boolean", "default": False}},
     ]
 
@@ -209,7 +217,7 @@ def _openapi() -> dict[str, Any]:
             "/api/v2/sessions/{session_id}/scene-contract": {
                 "get": {
                     "operationId": "getSceneContract",
-                    "summary": "Get compact Academy-style scene contract for gameplay",
+                    "summary": "Get memory-safe compact scene contract for gameplay",
                     "parameters": [_session_path_param()] + _scene_contract_params(),
                     "responses": {"200": _response("Scene contract", "SceneContractResponse")},
                 }
@@ -227,7 +235,7 @@ def _openapi() -> dict[str, Any]:
                     "operationId": "applyTurnResult",
                     "summary": "Apply meaningful scene changes",
                     "parameters": [_session_path_param()],
-                    "requestBody": {"required": False, "content": {"application/json": {"schema": _object_schema({"turn_file": {"type": "string"}, "data": _object_schema(), "dry_run": {"type": "boolean", "default": False}, "visible_scene_text": {"type": "string"}})}}},
+                    "requestBody": {"required": False, "content": {"application/json": {"schema": _object_schema({"turn_file": {"type": "string"}, "data": _object_schema(), "dry_run": {"type": "boolean", "default": False}, "visible_scene_text": {"type": "string"}, "render_packet": _object_schema()})}}},
                     "responses": {"200": _response("Apply result", "ApplyTurnResultResponse")},
                 }
             },
@@ -251,4 +259,4 @@ def openapi_actions() -> dict[str, Any]:
 
 app.openapi_schema = None
 app.openapi = _openapi  # type: ignore[method-assign]
-app.version = "0.3.149-academy-style-scene-contract-v1"
+app.version = "0.3.150-memory-safe-scene-contract-v1"
