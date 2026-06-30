@@ -7,6 +7,9 @@ energy_runtime_digest:
     emma: "water / moisture / liquid pressure"
     irey: "space + spatial-sensory link; intentional touch creates an anchor; contact is not required forever; anchor lasts about a day then weakens"
     raiden: "cold + air"
+    jun: "barrier / illusion shift / concealment"
+    ray: "sensory analysis"
   forbidden:
-    - "Do not render energy-capable characters as ordinary humans if their energy packet is loaded."
-    - "Do not invent new abilities beyond character packets."
+    - "Do not render energy-capable characters as ordinary humans if their energy slice is loaded."
+    - "Do not invent new abilities beyond character slices."
+    - "Do not make energy decorative magic; render physical effect or tactical consequence."

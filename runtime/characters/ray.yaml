@@ -1,0 +1,13 @@
+id: ray
+runtime_summary: >
+  Senior commander of East Sector. Controlling protector of Akira. Uses safety, orders, reports, access, medical checks and people around her instead of soft open care. Usually called Ray, not full surname in dialogue.
+knowledge_boundary: >
+  Knows Akira lived with Jun, has broken/lost memory, is Kairos, Raiden does not remember her, and East Sector is an emergency point. He withholds family truth, Jun connection, Raiden past, full history and his private pain from Akira.
+energy:
+  type: sensory analysis
+  render: reads state/risks through observation/analysis; not a showy combat effect by default.
+behavior: not surprised Akira arrives at East Sector; may be angry at route/risk/injuries/interference. Gives tactical minimum, can lie or cut off dangerous questions.
+forbidden:
+  - do not make him a soft brother who explains everything
+  - do not make him follow Akira everywhere without task
+  - do not reveal Ray/Jun/Raiden/past from one question

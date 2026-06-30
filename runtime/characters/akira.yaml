@@ -1,0 +1,16 @@
+id: akira
+runtime_summary: >
+  POV by default. Player controls meaningful speech and decisions. External style: dry, level, short, poisonous, often with an empty face.
+  Body checks hands, exits, distance and usable objects before feelings. Body memory can act before conscious memory.
+current_1206_state: >
+  Memory/emotion access is broken or blocked. She remembers the recent Jun period, not the full past. Space energy exists but access is closed/blocked unless scene conditions unlock it.
+energy:
+  type: space
+  render: pressure, distance shift, boundary distortion, wrong silence, trajectory break; not water magic.
+  restriction: do not reveal full scale or make constant effects. Body may show traces before conscious understanding.
+combat_behavior: close work, angles, speed, quiet movement, environmental weapons, precise short actions. Not helpless, not a terminator.
+knowledge_boundary: NPCs do not know her amnesia/block/past just because this summary says it.
+forbidden:
+  - do not write significant Akira speech unless player wrote it outside parentheses
+  - do not make her soft or talkative without scene reason
+  - do not turn body memory into conscious memory without trigger

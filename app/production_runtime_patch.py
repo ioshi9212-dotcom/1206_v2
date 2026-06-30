@@ -67,12 +67,18 @@ try:
 except Exception:
     npc_knowledge_visibility = None  # type: ignore[assignment]
 
+# Keep old route available internally, but override gameplay route with compact Academy-style scene contract.
 try:
     import app.section_aware_turn_packet_runtime_patch as section_aware_turn_packet  # noqa: F401
 except Exception:
     section_aware_turn_packet = None  # type: ignore[assignment]
 
-app.version = "0.3.148-compact-turn-packet-v1"
+try:
+    import app.compact_scene_contract_runtime_patch as compact_scene_contract  # noqa: F401
+except Exception:
+    compact_scene_contract = None  # type: ignore[assignment]
+
+app.version = "0.3.149-academy-style-scene-contract-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -95,28 +101,23 @@ def _components() -> dict:
             "public_base_url": {"type": "string"},
         }),
         "SessionResponse": _object_schema({
+            "success": {"type": "boolean"},
             "session_id": {"type": "string"},
             "title": {"type": "string"},
             "created_at": {"type": "string"},
             "updated_at": {"type": "string"},
             "start_scene": _object_schema(),
         }, required=["session_id"]),
-        "TurnPacketResponse": _object_schema({
+        "SceneContractResponse": _object_schema({
             "success": {"type": "boolean"},
             "session_id": {"type": "string"},
-            "mode": {"type": "string"},
             "runtime_version": {"type": "string"},
-            "current_state_slice": _object_schema(),
-            "calendar_slice": _object_schema(),
+            "mode": {"type": "string"},
             "active_character_ids": _array_string(),
             "scene_character_ids": _array_string(),
-            "world_energy_digest": _object_schema(),
-            "character_packets": {"type": "array", "items": _object_schema()},
-            "recent_scene_history": {"type": "array", "items": _object_schema()},
-            "npc_knowledge_boundary": _object_schema(),
+            "scene_contract": _object_schema(),
             "context_audit": _object_schema(),
-            "render_rules": _array_string(),
-        }),
+        }, required=["success", "session_id", "scene_contract"]),
         "ContextAuditResponse": _object_schema({
             "success": {"type": "boolean"},
             "session_id": {"type": "string"},
@@ -124,9 +125,10 @@ def _components() -> dict:
             "mode": {"type": "string"},
             "active_character_ids": _array_string(),
             "scene_character_ids": _array_string(),
-            "context_audit": _object_schema(),
-            "sections_per_character": _object_schema(),
-            "world_energy_digest_loaded": {"type": "boolean"},
+            "energy_loaded_by_character": _object_schema(),
+            "runtime_sources": _object_schema(),
+            "has_static_knowledge": _object_schema(),
+            "contract_chars_estimate": {"type": "integer"},
             "instructions": _array_string(),
         }),
         "ProcessTurnResponse": _object_schema({
@@ -160,16 +162,16 @@ def _session_path_param() -> dict:
     return {"name": "session_id", "in": "path", "required": True, "schema": {"type": "string"}}
 
 
-def _turn_packet_params() -> list[dict]:
+def _scene_contract_params() -> list[dict]:
     return [
-        {"name": "max_total_chars", "in": "query", "required": False, "schema": {"type": "integer", "default": 10000, "minimum": 6000, "maximum": 18000}},
+        {"name": "max_total_chars", "in": "query", "required": False, "schema": {"type": "integer", "default": 9000, "minimum": 6000, "maximum": 14000}},
         {"name": "include_debug", "in": "query", "required": False, "schema": {"type": "boolean", "default": False}},
     ]
 
 
 def _audit_params() -> list[dict]:
     return [
-        {"name": "max_total_chars", "in": "query", "required": False, "schema": {"type": "integer", "default": 18000, "minimum": 10000, "maximum": 26000}},
+        {"name": "max_total_chars", "in": "query", "required": False, "schema": {"type": "integer", "default": 12000, "minimum": 7000, "maximum": 18000}},
     ]
 
 
@@ -180,12 +182,55 @@ def _openapi() -> dict[str, Any]:
         "servers": [{"url": start_runtime.base.BASE_URL}],
         "components": {"schemas": _components()},
         "paths": {
-            "/health": {"get": {"operationId": "health", "summary": "Check API health and runtime version", "responses": {"200": _response("API health status", "HealthResponse")}}},
-            "/api/v1/sessions": {"post": {"operationId": "createSession", "summary": "Create a new gameplay session", "requestBody": {"required": False, "content": {"application/json": {"schema": _object_schema({"session_id": {"type": "string"}, "title": {"type": "string"}, "reset": {"type": "boolean"}})}}}, "responses": {"200": _response("Created session", "SessionResponse")}}},
-            "/api/v2/sessions/{session_id}/turn-packet": {"get": {"operationId": "getTurnPacket", "summary": "Get compact section-aware gameplay packet with character energy/limits/knowledge boundaries", "parameters": [_session_path_param()] + _turn_packet_params(), "responses": {"200": _response("Turn packet", "TurnPacketResponse")}}},
-            "/api/v2/sessions/{session_id}/debug/context-audit": {"get": {"operationId": "getContextAudit", "summary": "Read-only audit for section-aware turn packet: loaded character sections and energy availability", "parameters": [_session_path_param()] + _audit_params(), "responses": {"200": _response("Context audit", "ContextAuditResponse")}}},
-            "/api/v1/sessions/{session_id}/turn": {"post": {"operationId": "processTurn", "summary": "Return gameplay start scene or compact scene packet", "parameters": [_session_path_param()], "requestBody": {"required": True, "content": {"application/json": {"schema": _object_schema({"player_input": {"type": "string"}, "mode": {"type": "string", "default": "play"}, "state_patches": _object_schema()}, required=["player_input"])}}}, "responses": {"200": _response("Processed turn", "ProcessTurnResponse")}}},
-            "/api/v1/sessions/{session_id}/apply-turn-result": {"post": {"operationId": "applyTurnResult", "summary": "Apply meaningful scene changes", "parameters": [_session_path_param()], "requestBody": {"required": False, "content": {"application/json": {"schema": _object_schema({"turn_file": {"type": "string"}, "data": _object_schema(), "dry_run": {"type": "boolean", "default": False}, "visible_scene_text": {"type": "string"}})}}}, "responses": {"200": _response("Apply result", "ApplyTurnResultResponse")}}},
+            "/health": {
+                "get": {
+                    "operationId": "health",
+                    "summary": "Check API health and runtime version",
+                    "responses": {"200": _response("API health status", "HealthResponse")},
+                }
+            },
+            "/api/v1/sessions": {
+                "post": {
+                    "operationId": "createSession",
+                    "summary": "Create or initialize a gameplay session",
+                    "requestBody": {"required": False, "content": {"application/json": {"schema": _object_schema({"session_id": {"type": "string"}, "title": {"type": "string"}, "reset": {"type": "boolean"}})}}},
+                    "responses": {"200": _response("Created session", "SessionResponse")},
+                }
+            },
+            "/api/v1/sessions/{session_id}/turn": {
+                "post": {
+                    "operationId": "processTurn",
+                    "summary": "Return exact first start_scene text for start command",
+                    "parameters": [_session_path_param()],
+                    "requestBody": {"required": True, "content": {"application/json": {"schema": _object_schema({"player_input": {"type": "string"}, "mode": {"type": "string", "default": "play"}, "include_file_contents": {"type": "boolean", "default": False}, "state_patches": _object_schema()}, required=["player_input"])}}},
+                    "responses": {"200": _response("Processed turn", "ProcessTurnResponse")},
+                }
+            },
+            "/api/v2/sessions/{session_id}/scene-contract": {
+                "get": {
+                    "operationId": "getSceneContract",
+                    "summary": "Get compact Academy-style scene contract for gameplay",
+                    "parameters": [_session_path_param()] + _scene_contract_params(),
+                    "responses": {"200": _response("Scene contract", "SceneContractResponse")},
+                }
+            },
+            "/api/v2/sessions/{session_id}/debug/context-audit": {
+                "get": {
+                    "operationId": "getContextAudit",
+                    "summary": "Read-only audit for compact scene contract: character runtime summaries and energy availability",
+                    "parameters": [_session_path_param()] + _audit_params(),
+                    "responses": {"200": _response("Context audit", "ContextAuditResponse")},
+                }
+            },
+            "/api/v1/sessions/{session_id}/apply-turn-result": {
+                "post": {
+                    "operationId": "applyTurnResult",
+                    "summary": "Apply meaningful scene changes",
+                    "parameters": [_session_path_param()],
+                    "requestBody": {"required": False, "content": {"application/json": {"schema": _object_schema({"turn_file": {"type": "string"}, "data": _object_schema(), "dry_run": {"type": "boolean", "default": False}, "visible_scene_text": {"type": "string"}})}}},
+                    "responses": {"200": _response("Apply result", "ApplyTurnResultResponse")},
+                }
+            },
         },
     }
 
@@ -206,4 +251,4 @@ def openapi_actions() -> dict[str, Any]:
 
 app.openapi_schema = None
 app.openapi = _openapi  # type: ignore[method-assign]
-app.version = "0.3.148-compact-turn-packet-v1"
+app.version = "0.3.149-academy-style-scene-contract-v1"
