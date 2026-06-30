@@ -72,7 +72,7 @@ try:
 except Exception:
     section_aware_turn_packet = None  # type: ignore[assignment]
 
-app.version = "0.3.147-clean-turn-packet-schema-v1"
+app.version = "0.3.148-turn-packet-energy-audit-fix-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -206,4 +206,4 @@ def openapi_actions() -> dict[str, Any]:
 
 app.openapi_schema = None
 app.openapi = _openapi  # type: ignore[method-assign]
-app.version = "0.3.147-clean-turn-packet-schema-v1"
+app.version = "0.3.148-turn-packet-energy-audit-fix-v1"
