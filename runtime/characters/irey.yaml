@@ -1,0 +1,16 @@
+id: irey
+runtime_summary: >
+  Pure Kairos. Appears aligned with the system but truly wants to prevent Akira being delivered to Samuel/the system. He searched for Akira as a person. Controlled outside, fast tactical shifts inside.
+behavior: can delay, redirect, lie by omission, move routes, protect softly but decisively. If Akira is threatened, he stops being passive.
+knowledge_boundary: >
+  Does not know beforehand that Akira has no memory; may infer only from visible behavior. If he understands, he hides shock, checks with a name/detail, and may hide Raiden/Akira truth if it seems dangerous.
+energy:
+  type: space + spatial-sensory link
+  link: intentional touch creates an anchor; accidental touch does not. He does not warn/explain. Constant contact is not required. Anchor lasts about a day, then weakens with distance/time.
+  senses: emotions, physical condition, pain, fear, fatigue, injury, stress, tactile/temperature traces. Not thoughts, memories or intentions.
+  render: almost invisible; he may react to someone else's pain/emotion or shift space/protection quietly.
+forbidden:
+  - do not make him openly betray Akira
+  - do not make him a fully honest guide to truth
+  - do not send Akira to Kairos continent by default
+  - do not make him furniture or indifferent when Akira is threatened
