@@ -72,7 +72,7 @@ try:
 except Exception:
     section_aware_turn_packet = None  # type: ignore[assignment]
 
-app.version = "0.3.148-turn-packet-energy-audit-fix-v1"
+app.version = "0.3.148-compact-turn-packet-v1"
 
 
 def _object_schema(properties: dict | None = None, *, required: list[str] | None = None) -> dict:
@@ -162,14 +162,14 @@ def _session_path_param() -> dict:
 
 def _turn_packet_params() -> list[dict]:
     return [
-        {"name": "max_total_chars", "in": "query", "required": False, "schema": {"type": "integer", "default": 24000, "minimum": 12000, "maximum": 42000}},
+        {"name": "max_total_chars", "in": "query", "required": False, "schema": {"type": "integer", "default": 10000, "minimum": 6000, "maximum": 18000}},
         {"name": "include_debug", "in": "query", "required": False, "schema": {"type": "boolean", "default": False}},
     ]
 
 
 def _audit_params() -> list[dict]:
     return [
-        {"name": "max_total_chars", "in": "query", "required": False, "schema": {"type": "integer", "default": 30000, "minimum": 12000, "maximum": 42000}},
+        {"name": "max_total_chars", "in": "query", "required": False, "schema": {"type": "integer", "default": 18000, "minimum": 10000, "maximum": 26000}},
     ]
 
 
@@ -182,7 +182,7 @@ def _openapi() -> dict[str, Any]:
         "paths": {
             "/health": {"get": {"operationId": "health", "summary": "Check API health and runtime version", "responses": {"200": _response("API health status", "HealthResponse")}}},
             "/api/v1/sessions": {"post": {"operationId": "createSession", "summary": "Create a new gameplay session", "requestBody": {"required": False, "content": {"application/json": {"schema": _object_schema({"session_id": {"type": "string"}, "title": {"type": "string"}, "reset": {"type": "boolean"}})}}}, "responses": {"200": _response("Created session", "SessionResponse")}}},
-            "/api/v2/sessions/{session_id}/turn-packet": {"get": {"operationId": "getTurnPacket", "summary": "Get one prepared section-aware gameplay packet with character energy/limits/knowledge boundaries", "parameters": [_session_path_param()] + _turn_packet_params(), "responses": {"200": _response("Turn packet", "TurnPacketResponse")}}},
+            "/api/v2/sessions/{session_id}/turn-packet": {"get": {"operationId": "getTurnPacket", "summary": "Get compact section-aware gameplay packet with character energy/limits/knowledge boundaries", "parameters": [_session_path_param()] + _turn_packet_params(), "responses": {"200": _response("Turn packet", "TurnPacketResponse")}}},
             "/api/v2/sessions/{session_id}/debug/context-audit": {"get": {"operationId": "getContextAudit", "summary": "Read-only audit for section-aware turn packet: loaded character sections and energy availability", "parameters": [_session_path_param()] + _audit_params(), "responses": {"200": _response("Context audit", "ContextAuditResponse")}}},
             "/api/v1/sessions/{session_id}/turn": {"post": {"operationId": "processTurn", "summary": "Return gameplay start scene or compact scene packet", "parameters": [_session_path_param()], "requestBody": {"required": True, "content": {"application/json": {"schema": _object_schema({"player_input": {"type": "string"}, "mode": {"type": "string", "default": "play"}, "state_patches": _object_schema()}, required=["player_input"])}}}, "responses": {"200": _response("Processed turn", "ProcessTurnResponse")}}},
             "/api/v1/sessions/{session_id}/apply-turn-result": {"post": {"operationId": "applyTurnResult", "summary": "Apply meaningful scene changes", "parameters": [_session_path_param()], "requestBody": {"required": False, "content": {"application/json": {"schema": _object_schema({"turn_file": {"type": "string"}, "data": _object_schema(), "dry_run": {"type": "boolean", "default": False}, "visible_scene_text": {"type": "string"}})}}}, "responses": {"200": _response("Apply result", "ApplyTurnResultResponse")}}},
@@ -206,4 +206,4 @@ def openapi_actions() -> dict[str, Any]:
 
 app.openapi_schema = None
 app.openapi = _openapi  # type: ignore[method-assign]
-app.version = "0.3.148-turn-packet-energy-audit-fix-v1"
+app.version = "0.3.148-compact-turn-packet-v1"
